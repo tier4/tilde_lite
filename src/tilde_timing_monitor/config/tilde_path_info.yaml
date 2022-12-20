@@ -1,0 +1,14 @@
+/**:
+  ros__parameters:
+    required_paths:
+      test:
+        /localization/pose_estimator/for_tilde_interpolator_mtt: {
+            mtype: "tilde_timing_monitor_interfaces/msg/MessageTrackingTag",
+            path_name: "EKF=>NDT", 
+            path_i: 0, p_i: 100.0, d_i: 200.0, level: warn
+            }
+        /localization/pose_estimator/pose_with_covariance: {
+            mtype: "geometry_msgs/msg/PoseWithCovarianceStamped",
+            path_name: "PCL=>NDT", 
+            path_i: 1, p_i: 100.0, d_i: 150.0, level: warn
+            }

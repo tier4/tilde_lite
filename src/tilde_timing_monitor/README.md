@@ -18,18 +18,14 @@ If you use the TILDE message tracking tag, the response time will be the time un
 note: ndt_scan_matcher contains a unique change that outputs the latest EKF pose topic used during interpolation.
 
 ## install
+- repo: https://github.com/tier4/tilde_lite.git
+
 ```
 cd ~/colcon_ws
-git clone -b feat/timing_monitor_node https://github.com/xygyo77/TILDE_aggregator.git
-cd TILDE_aggregator
-
+git clone https://github.com/tier4/tilde_lite.git
+cd tilde_lite
 colcon build --symlink-install
 ```
-tilde_timing_monitor directory
-```
-~/colcon_wd/TILDE_aggregator/src/tilde_timing_monitor_cpp
-```
-
 ## operation
 - source ROS2/autoware environments
 - prepare path list yaml file (see. config/tilde_path_info.yaml)
@@ -39,7 +35,7 @@ tilde_timing_monitor directory
     required_paths:
       test:
         /localization/pose_estimator/for_tilde_interpolator_mtt: {
-            mtype: "tilde_timing_monitor_interfaces/msg/MessageTrackingTag",
+            mtype: "tilde_msg/msg/MessageTrackingTag",
             path_name: "EKF=>NDT", 
             path_i: 0, p_i: 100.0, d_i: 150.0, level: warn
             }
@@ -52,7 +48,7 @@ tilde_timing_monitor directory
 |name|content|
 |-|-|
 |required_paths|measurement path information|
-|measurement id(ex. test)|measurement path set|
+|mode (ex. test)|measurement path set id|
 |topic name|end point node published topic name|
 |mtype|message type|
 |path_name(any word)|the name given to the path|
@@ -76,14 +72,14 @@ ros2 bag play /home/akm/data/sample-rosbag -r 0.2
 ```
 - tilde timing monitor
 ```
-source ~/colcon_ws/TILDE_aggregator/install/local_setup.bash
-
-ros2 launch tilde_timing_monitor_cpp tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml mode:=test
+source ~/colcon_ws/tilde_lite/install/local_setup.bash
+cp ~/colcon_ws/tilde_lite/src/tilde_timing_monitor/config/tilde_path_info.yaml .
+ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml mode:=test
 ```
 |param|value|content|default|
 |-|-|-|-|
 |mode|by config file|Measurement path type|test|
-|tick|integer|periodic timer tick period (hz)|1000|
+|tick|integer|periodic timer tick period (hz)|200|
 |statistics|bool|statistics collection control|true|
 
 ## output
@@ -115,7 +111,7 @@ deadline_timer_start_stamp:
   nanosec: 404774665
 deadline_timer_start: 1585897263.4047747
 mode: test
-tick: 1000
+tick: 200
 ```
 
 - information and statistics topic
@@ -238,7 +234,7 @@ ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/ms
 ----- statistics (v0.01) -----
 mode=test tick=200(hz)
 path_name=EKF=>NDT path_i=0 p_i=100(ms) d_i=200(ms)
-topic=/localization/pose_estimator/for_tilde_interpolator_mtt [tilde_timing_monitor_interfaces/msg/MessageTrackingTag]
+topic=/localization/pose_estimator/for_tilde_interpolator_mtt [tilde_msg/msg/MessageTrackingTag]
 path completed=211 presumed completed=0
 deadline miss=22 presumed miss=0
 response time(211) min=0.0713193416595459 ave=0.10486668998031255 max=0.13193845748901367 (sec)

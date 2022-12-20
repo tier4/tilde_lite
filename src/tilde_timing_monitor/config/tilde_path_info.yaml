@@ -3,7 +3,7 @@
     required_paths:
       test:
         /localization/pose_estimator/for_tilde_interpolator_mtt: {
-            mtype: "tilde_timing_monitor_interfaces/msg/MessageTrackingTag",
+            mtype: "tilde_msg/msg/MessageTrackingTag",
             path_name: "EKF=>NDT", 
             path_i: 0, p_i: 100.0, d_i: 200.0, level: warn
             }

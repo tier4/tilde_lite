@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+*.pyc
+__pycache__
+__env__
+build
+install
+log
+.vscode
+

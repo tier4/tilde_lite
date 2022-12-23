@@ -213,7 +213,7 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
 // all topic process
 void TildeTimingMonitor::topicCallback(TildePathConfig & pinfo, double & cur_ros, double & pub_time, double real_response_time)
 {
-  topicStatis(pinfo, pub_time);
+  topicStatis(pinfo, pub_time, cur_ros);
   uint64_t already_deadline_miss_count = 0;
   log(fmt::format("--[{}]:{} <{}> cur_j={} comleted_j={} cur_ros={} pub_time={}",
               __func__, __LINE__, pinfo.path_name.c_str(), pinfo.cur_j, pinfo.completed_j, cur_ros, pub_time));
@@ -258,15 +258,20 @@ void TildeTimingMonitor::topicCallback(TildePathConfig & pinfo, double & cur_ros
     }
     pinfo.deadline_timer.clear();
   } else {
+    /**
     respTimeStatis(pinfo, real_response_time, true);
     completed_count++;
     pinfo.completed_j++;
     log(fmt::format("--[{}]:{} <{}> cur_j={} comleted_j={} completed_count={}", 
                      __func__, __LINE__, pinfo.path_name.c_str(), pinfo.cur_j, pinfo.completed_j, completed_count));
+    **/
   }
   if(completed_count != 0) {
     pinfo.completed_count += 1;
-    pinfo.presumed_completed_count += (completed_count - 1);
+    completed_count--;
+    if(completed_count > 0) {
+      pinfo.presumed_completed_count += completed_count;
+    }
     pinfo.cur_j = pinfo.completed_j + 1;
     log(fmt::format("--[{}]:{} <{}> cur_j={} comleted_j={} completed_count={}", 
                      __func__, __LINE__, pinfo.path_name.c_str(), pinfo.cur_j, pinfo.completed_j, completed_count));
@@ -275,7 +280,7 @@ void TildeTimingMonitor::topicCallback(TildePathConfig & pinfo, double & cur_ros
   auto next_periodic_start = pinfo.r_i_j;
   log(fmt::format("--[{}]:{} <{}> cur_j={} comleted_j={} completed_count={}", 
                    __func__, __LINE__, pinfo.path_name.c_str(), pinfo.cur_j, pinfo.completed_j, completed_count));
-  for(; next_periodic_start < cur_ros; next_periodic_start += pinfo.p_i)
+  for(; next_periodic_start <= cur_ros; next_periodic_start += pinfo.p_i)
   {
     if(already_deadline_miss_count > 0) {
       already_deadline_miss_count -= 1;
@@ -318,7 +323,7 @@ void TildeTimingMonitor::onMttTopic(
   pinfo.r_i_j_1_stamp = msg->input_infos[0].header_stamp;
   pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
   double real_response_time = pub_time - pinfo.r_i_j_1;
-  if(real_response_time < pinfo.d_i) {
+  if(real_response_time <= pinfo.d_i) {
     topicCallback(pinfo, cur_ros, pub_time, real_response_time);
   } else {
     tooLongRespTimeStatis(pinfo, real_response_time);
@@ -346,7 +351,7 @@ void TildeTimingMonitor::onGenTopic(
   double pub_time = stamp_to_sec(header_msg.stamp);
   pinfo.r_i_j_1 = pub_time;
   double real_response_time = cur_ros - pub_time;
-  if(real_response_time < pinfo.d_i) {
+  if(real_response_time <=pinfo.d_i) {
     topicCallback(pinfo, cur_ros, pub_time, real_response_time);
   } else {
     tooLongRespTimeStatis(pinfo, real_response_time);
@@ -523,8 +528,11 @@ void TildeTimingMonitor::cmdShowStatis()
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("r_i_j_1={} r_i_j={}", pinfo.r_i_j_1, pinfo.r_i_j);
     std::cout << fs.c_str() << std::endl;
-    fs = fmt::format("topic({}) HZ min={} ave={} max={} (sec)",
-                      pinfo.hz.getCnt(), pinfo.hz.getMin(), pinfo.hz.getAve(), pinfo.hz.getMax());
+    fs = fmt::format("topic({}) HZ min={} ave={} max={} (sec) d_i over={}",
+                      pinfo.hz.getCnt(), pinfo.hz.getMin(), pinfo.hz.getAve(), pinfo.hz.getMax(), pinfo.hz.getOver());
+    std::cout << fs.c_str() << std::endl;
+    fs = fmt::format("topic({}) Sub interval min={} ave={} max={} (sec) d_i over={}",
+                      pinfo.sub_interval.getCnt(), pinfo.sub_interval.getMin(), pinfo.sub_interval.getAve(), pinfo.sub_interval.getMax(), pinfo.sub_interval.getOver());
     std::cout << fs.c_str() << std::endl;
     std::cout << "-- deadline timer ---" << std::endl;
     for(auto kv: pinfo.deadline_timer)
@@ -668,11 +676,12 @@ double TildeTimingMonitor::get_now()
   }
   return init_pseudo_ros_time + (nano_to_sec(steady_clock_->now().nanoseconds()) - init_dur_pseudo_ros_time);
 }
-void TildeTimingMonitor::topicStatis(TildePathConfig & pinfo, double & pub_time)
+void TildeTimingMonitor::topicStatis(TildePathConfig & pinfo, double & pub_time, double & cur_ros)
 {
   if(params_.statistics) {
     //RCLCPP_INFO(get_logger(), "--[%s]:%04d called", __func__, __LINE__);
-    pinfo.hz.addRate(pub_time);
+    pinfo.hz.addRate(pub_time, pinfo.d_i);
+    pinfo.sub_interval.addRate(cur_ros, pinfo.d_i);
   }
 }
 

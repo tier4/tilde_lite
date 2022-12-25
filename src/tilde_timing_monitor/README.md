@@ -80,7 +80,6 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 |-|-|-|-|
 |mode|by config file|Measurement path type|test|
 |tick|integer|periodic timer tick period (hz)|200|
-|statistics|bool|statistics collection control|true|
 
 ## output
 

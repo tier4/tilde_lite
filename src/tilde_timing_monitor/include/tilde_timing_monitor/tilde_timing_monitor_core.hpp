@@ -54,7 +54,7 @@ class MinMax {
 
 class RateMinMax : public MinMax {
   public:
-    void addRate(double & pub_time) {
+    void addRate(double & pub_time, double & limit) {
       if(mPrevPub == 0.0) {
         mPrevPub = pub_time;
         return;
@@ -62,14 +62,20 @@ class RateMinMax : public MinMax {
       auto elapse = pub_time - mPrevPub;
       addData(elapse);
       mPrevPub = pub_time;
+      if(elapse >= limit) {
+        over_count++;
+      }
     }
     void setName(const char *name) {
       mName = name;
       mMin = 10000000.0;
+      over_count = 0;
     }
+    uint64_t getOver() {return over_count;}
     void setPrev(double & pub_time){mPrevPub = pub_time;}
   private:
     double mPrevPub;
+    uint64_t over_count;
 };
 
 class ElapseMinMax : public MinMax {
@@ -117,16 +123,26 @@ public:
   std::shared_ptr<std::mutex> tm_mutex;
   TildePathConfig() {
     std::shared_ptr<std::mutex> mtx(new std::mutex);
-    completed_j = -1lu;
+    status = e_stat::ST_NONE;
+    cur_j = 0l;
+    completed_j = -1l;
+    completed_count = 0lu;
+    presumed_completed_count = 0lu;
+    deadline_miss_count = 0lu;
+    presumed_deadline_miss_count = 0lu;
     tm_mutex = mtx;
     response_time.setName("response_time");
     presumed_response_time.setName("presumed_response_time");
     too_long_response_time.setName("too_long_response_time");
     hz.setName("hz");
+    hz.setName("sub_interval");
+    deadline_timer_manage = 0lu;
+    recv_count = 0lu;
+    OK = 0lu;
+    NG = 0lu;
   }
   // variables
-  //enum {ST_NONE, ST_INIT, ST_DETECT,};
-  e_stat status = e_stat::ST_NONE;
+  e_stat status;
   int64_t cur_j;
   int64_t completed_j;
   double prev_tick_time;
@@ -138,15 +154,19 @@ public:
   double r_i_j;
   double prev_periodic;
   uint64_t deadline_timer_manage;
+  uint64_t recv_count;
+  uint64_t OK;
+  uint64_t NG;
   //
-  uint64_t completed_count;
   MinMax response_time;
   MinMax presumed_response_time;
   MinMax too_long_response_time;
+  uint64_t completed_count;
   uint64_t presumed_completed_count;
   uint64_t deadline_miss_count;
   uint64_t presumed_deadline_miss_count;
   RateMinMax hz;
+  RateMinMax sub_interval;
 };
 
 using RequiredPaths = std::vector<TildePathConfig>;
@@ -204,7 +224,7 @@ private:
   void pubCmdReqInfo();
   void respTimeStatis(TildePathConfig & pinfo, double & response_time, bool real);
   void tooLongRespTimeStatis(TildePathConfig & pinfo, double & response_time);
-  void topicStatis(TildePathConfig & pinfo, double & pub_time);
+  bool topicStatis(TildePathConfig & pinfo, double & pub_time, double & cur_ros);
   void cbStatisEnter(const char *func);
   void cbStatisExit(const char *func);
   void cmdShowStatis();

@@ -26,7 +26,6 @@ git clone https://github.com/tier4/tilde_lite.git
 cd tilde_lite
 colcon build --symlink-install
 ```
-
 ## operation
 - source ROS2/autoware environments
 - prepare path list yaml file (see. config/tilde_path_info.yaml)

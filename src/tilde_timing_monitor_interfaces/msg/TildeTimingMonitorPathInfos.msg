@@ -1,17 +1,12 @@
 string path_name
 string topic
 int32 completed_count
-int32 presumed_completed_count
 int32 deadline_miss_count
 int32 presumed_deadline_miss_count
 int32 response_count
 float64 response_time_min
 float64 response_time_ave
 float64 response_time_max
-int32 presumed_response_count
-float64 presumed_response_time_min
-float64 presumed_response_time_ave
-float64 presumed_response_time_max
 int32 too_long_response_count
 float64 too_long_response_time_min
 float64 too_long_response_time_ave

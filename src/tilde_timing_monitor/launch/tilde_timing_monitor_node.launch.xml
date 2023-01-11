@@ -2,7 +2,6 @@
   <arg name="config_file" default="$(find-pkg-share tilde_timing_monitor)/config/tilde_path_info.yaml" />
   <arg name="statistics" default="true"/>
   <arg name="mode" default="test"/>
-  <arg name="tick" default="200" />
   <arg name="use_sim_time" default="true"/>
   <arg name="pseudo_ros_time" default="false"/>
 
@@ -13,7 +12,6 @@
     <param from="$(var config_file)" />
     <param name="statistics" value="$(var statistics)" />
     <param name="mode" value="$(var mode)" />
-    <param name="tick" value="$(var tick)" />
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="pseudo_ros_time" value="$(var pseudo_ros_time)"/>
   </node>

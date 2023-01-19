@@ -14,4 +14,3 @@ float64 last_r_i_j_1_float
 builtin_interfaces/Time deadline_timer_start_stamp
 float64 deadline_timer_start
 string mode
-int32 tick

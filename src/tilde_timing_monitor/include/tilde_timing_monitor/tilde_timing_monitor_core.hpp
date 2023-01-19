@@ -64,18 +64,22 @@ class RateMinMax : public MinMax {
       mPrevPub = pub_time;
       if(elapse >= limit) {
         over_count++;
+        over_per_limit += elapse / limit;
       }
     }
     void setName(const char *name) {
       mName = name;
       mMin = 10000000.0;
       over_count = 0;
+      over_per_limit = 0;
     }
     uint64_t getOver() {return over_count;}
+    uint64_t getPerLimit() {return over_per_limit;}
     void setPrev(double & pub_time){mPrevPub = pub_time;}
   private:
     double mPrevPub;
     uint64_t over_count;
+    uint64_t over_per_limit;
 };
 
 class ElapseMinMax : public MinMax {
@@ -127,15 +131,14 @@ public:
     cur_j = 0l;
     completed_j = -1l;
     completed_count = 0lu;
-    presumed_completed_count = 0lu;
     deadline_miss_count = 0lu;
     presumed_deadline_miss_count = 0lu;
     tm_mutex = mtx;
     response_time.setName("response_time");
-    presumed_response_time.setName("presumed_response_time");
     too_long_response_time.setName("too_long_response_time");
     hz.setName("hz");
-    hz.setName("sub_interval");
+    sub_interval.setName("sub_interval");
+    com_delay.setName("com_delay");
     deadline_timer_manage = 0lu;
     recv_count = 0lu;
     OK = 0lu;
@@ -146,27 +149,26 @@ public:
   int64_t cur_j;
   int64_t completed_j;
   double prev_tick_time;
-  double periodic_timer;
   double periodic_timer_val;
+  rclcpp::TimerBase::SharedPtr periodic_timer;
+  rclcpp::TimerBase::SharedPtr interval_timer;
   DeadlineTimerMap deadline_timer;
   builtin_interfaces::msg::Time r_i_j_1_stamp;
   double r_i_j_1;
   double r_i_j;
-  double prev_periodic;
   uint64_t deadline_timer_manage;
   uint64_t recv_count;
   uint64_t OK;
   uint64_t NG;
   //
   MinMax response_time;
-  MinMax presumed_response_time;
   MinMax too_long_response_time;
   uint64_t completed_count;
-  uint64_t presumed_completed_count;
   uint64_t deadline_miss_count;
   uint64_t presumed_deadline_miss_count;
   RateMinMax hz;
   RateMinMax sub_interval;
+  MinMax com_delay;
 };
 
 using RequiredPaths = std::vector<TildePathConfig>;
@@ -189,7 +191,6 @@ private:
     bool statistics;
     bool pseudo_ros_time;
     std::string mode;
-    uint64_t tick;
   };
 
   Parameters params_{};
@@ -204,6 +205,9 @@ private:
   void loadRequiredPaths(const std::string & key);
 
   // Timer
+  void onIntervalTimer(TildePathConfig & pinfo);
+  void startIntervalTimer(TildePathConfig & pinfo, double time_val);
+  void startPeriodicTimer(TildePathConfig & pinfo, double time_val);
   void onPeriodicTimer(TildePathConfig & pinfo);
   void onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer dm);
   void startDeadlineTimer(TildePathConfig & pinfo, double start_time, double time_val);
@@ -212,7 +216,7 @@ private:
   // Subscriber
   void onMttTopic(const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo);
   void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo);
-  void topicCallback(TildePathConfig & pinfo, double & cur_ros, double & pub_time, double read_response_time);
+  void topicCallback(TildePathConfig & pinfo, double & cur_ros, double & pub_time);
 
   // Publisher
   rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr pub_tilde_deadline_miss_;
@@ -222,9 +226,9 @@ private:
   // for statistics and debug
   void onCommand(const tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg);
   void pubCmdReqInfo();
-  void respTimeStatis(TildePathConfig & pinfo, double & response_time, bool real);
+  void respTimeStatis(TildePathConfig & pinfo, double & response_time);
   void tooLongRespTimeStatis(TildePathConfig & pinfo, double & response_time);
-  bool topicStatis(TildePathConfig & pinfo, double & pub_time, double & cur_ros);
+  bool topicStatis(TildePathConfig & pinfo, double & s_stamp, double & cur_ros);
   void cbStatisEnter(const char *func);
   void cbStatisExit(const char *func);
   void cmdShowStatis();
@@ -234,6 +238,7 @@ private:
   void printLog();
   void enLog(bool ope);
   void dispLogCtrl(bool ope);
+  void ajustPseudoRosTime();
   void pseudoRosTimeInit();
 };
 

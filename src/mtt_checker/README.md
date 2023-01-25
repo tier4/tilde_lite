@@ -1,6 +1,7 @@
 # tilde MTT checker
 tilde_timing_monitor の観測結果の妥当性をチェックするツール。
 NDT-interporate時のMTTトピックを記録したファイルを用意し、MTT に収集した EKF-stamp 情報から静的に解析する。
+入力には、MTTを記録したrosbagファイル、あるいは`ros2 topic echo target-mtt-topic`で収集したmttトピックのyamlファイルを使用する。
 
 ## environment & install
 tilde_timing_monitor に同じ。
@@ -12,11 +13,8 @@ MTTトピックを収集したサンプルを sampleディレクトリ配下に�
 起動15秒後にstressコマンドで負荷を掛けてデッドラインミスを発生させてrosbagに記録    
 
 ## operation
-sourceコマンドで、ros2、AWFおよびtilde_timing_monitor環境を読み込む。
+sourceコマンドで、ros2、AWF および tilde_lite 環境を読み込む。
 ```
-<<<<<<< Updated upstream
-ros2 run mtt_checker mtt_checker tp-ekf-pose-CUR-AWF.yaml 100 200
-=======
 ros2 run mtt_checker mtt_checker -h
 usage: ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file
 
@@ -36,18 +34,12 @@ options:
                         topic name: Specify the target topic if there are
                         multiple MTTs in the rosbag. default:
                         for_tilde_interpolator_mtt
+```
 
->>>>>>> Stashed changes
+出力結果(最終行辺り)  
+**シンプルモード**  
+MTTのstampとその間隔のみで簡易的にデッドラインミスを検出する
 ```
-結果は最終行辺り
-```
-<<<<<<< Updated upstream
---- p_i=100.00(ms) d_i=200.00(ms) ---
---- p_i count= 159 p_i in time=265.268 ---
---- ( 129) OK: 90 NG:155 pseudo OK:  0 pseudo NG:  0 completed_j=245 ---
-```
-NG がデッドラインミス検出数を示している。
-=======
 ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m simple -p 100 -d 200 -t for_tilde_interpolator_mtt 
 ### DEBUG=False
 --- STAR### DEBUG=False
@@ -116,4 +108,3 @@ proc(s): pub_time - release_time (response_time)
 --- p_i count= 246 p_i in time=258.350 ---
 --- ( 248) OK:152 NG: 90 completed_j=242 ---
 (END:v0.11)---------------------------------```
->>>>>>> Stashed changes

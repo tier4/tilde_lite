@@ -103,7 +103,6 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 |param|value|content|default|
 |-|-|-|-|
 |mode|by config file|Measurement path type|test|
-|tick|integer|periodic timer tick period (hz)|200|
 |statistics|bool|statistics collection control|true|
 
 ## output
@@ -135,7 +134,6 @@ deadline_timer_start_stamp:
   nanosec: 404774665
 deadline_timer_start: 1585897263.4047747
 mode: test
-tick: 200
 ```
 
 - information and statistics topic
@@ -149,22 +147,16 @@ header:
     nanosec: 189880315
   frame_id: ''
 mode: test
-tick: 200
 path_info:
 - path_name: EKF=>NDT
   topic: /localization/pose_estimator/for_tilde_interpolator_mtt
   completed_count: 211
-  presumed_completed_count: 0
   deadline_miss_count: 22
   presumed_deadline_miss_count: 0
   response_count: 211
   response_time_min: 0.0713193416595459
   response_time_ave: 0.10486668998031255
   response_time_max: 0.13193845748901367
-  presumed_response_count: 0
-  presumed_response_time_min: 0.0
-  presumed_response_time_ave: 0.0
-  presumed_response_time_max: 0.0
   too_long_response_count: 0
   too_long_response_time_min: 0.0
   too_long_response_time_ave: 0.0
@@ -184,17 +176,12 @@ path_info:
 - path_name: PCL=>NDT
   topic: /localization/pose_estimator/pose_with_covariance
   completed_count: 228
-  presumed_completed_count: 0
   deadline_miss_count: 22
   presumed_deadline_miss_count: 0
   response_count: 228
   response_time_min: 0.10034441947937012
   response_time_ave: 0.12089436096057557
   response_time_max: 0.14562726020812988
-  presumed_response_count: 0
-  presumed_response_time_min: 0.0
-  presumed_response_time_ave: 0.0
-  presumed_response_time_max: 0.0
   too_long_response_count: 1
   too_long_response_time_min: 0.15234684944152832
   too_long_response_time_ave: 0.0
@@ -256,13 +243,12 @@ ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/ms
 ```
 ```
 ----- statistics (v0.01) -----
-mode=test tick=200(hz)
+mode=test
 path_name=EKF=>NDT path_i=0 p_i=100(ms) d_i=200(ms)
 topic=/localization/pose_estimator/for_tilde_interpolator_mtt [tilde_msg/msg/MessageTrackingTag]
 path completed=211 presumed completed=0
 deadline miss=22 presumed miss=0
 response time(211) min=0.0713193416595459 ave=0.10486668998031255 max=0.13193845748901367 (sec)
-presumed response time(0) min=0 ave=0 max=0 (sec)
 too long response time(0) min=0 ave=0 max=0 (sec)
 cur_j=271 completed_j=269
 r_i_j_1=1585897285.0887055 r_i_j=1585897285.1887054
@@ -274,7 +260,6 @@ topic=/localization/pose_estimator/pose_with_covariance [geometry_msgs/msg/PoseW
 path completed=228 presumed completed=0
 deadline miss=22 presumed miss=0
 response time(228) min=0.10034441947937012 ave=0.12089436096057557 max=0.14562726020812988 (sec)
-presumed response time(0) min=0 ave=0 max=0 (sec)
 too long response time(1) min=0.15234684944152832 ave=0.15234684944152832 max=0.15234684944152832 (sec)
 cur_j=253 completed_j=251
 r_i_j_1=1585897285.079973 r_i_j=1585897285.179973

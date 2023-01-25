@@ -356,7 +356,9 @@ def main():
     debug_ctrl(False)
 
     if args.mode != 'normal' and args.mode != 'simple':
-        print(f"## args mode error {args.mode}")
+
+
+print(f"## args mode error {args.mode}")
         sys.exit(-1)
 
     if args.mode == 'normal' and (args.periodic == None or args.periodic <= 0.0):

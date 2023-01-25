@@ -21,7 +21,7 @@ MTTトピックを収集したサンプルを sampleディレクトリ配下に�
 
 sourceコマンドで、ros2、AWF および tilde_lite 環境を読み込む。
 
-```
+```bash
 ros2 run mtt_checker mtt_checker -h
 usage: ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file
 
@@ -48,7 +48,7 @@ options:
 **シンプルモード**  
 MTTのstampとその間隔のみで簡易的にデッドラインミスを検出する
 
-```
+```bash
 ros2 run mtt_checker mtt_checker tp-ekf-pose-PREV-AWF.yaml -d 200 -m simple
 ### DEBUG=False
 --- START (simple: tp-ekf-pose-PREV-AWF.yaml) ---
@@ -80,7 +80,7 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 **ノーマルモード**  
 シンプルモードに加えて、periodicタイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延や、CPU負荷による時刻遅れは考慮されない。
 
-```
+```bash
 ros2 run mtt_checker mtt_checker tp-ekf-pose-PREV-AWF.yaml -p 100 -d 200 -m normal
 ### DEBUG=False
 --- START (normal: tp-ekf-pose-PREV-AWF.yaml) ---

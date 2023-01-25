@@ -28,6 +28,30 @@ colcon build --symlink-install
 ```
 ## operation
 - source ROS2/autoware environments
+
+- cyclone dds parameters
+Extend receive buffer size.
+
+cyclonedds_config.xml
+```
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config
+https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+    <Domain id="any">
+        <Internal>
+            <SocketReceiveBufferSize min="10MB"/>
+        </Internal>
+    </Domain>
+</CycloneDDS>
+```
+
+```
+export CYCLONEDDS_URI=file:///absolute/path/to/cyclonedds_config.xml
+sudo sysctl -w net.core.rmem_max=2147483647
+```
+
+See https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/#tuning-dds
+
 - prepare path list yaml file (see. config/tilde_path_info.yaml)
 ```
 /**:
@@ -37,12 +61,12 @@ colcon build --symlink-install
         /localization/pose_estimator/for_tilde_interpolator_mtt: {
             mtype: "tilde_msg/msg/MessageTrackingTag",
             path_name: "EKF=>NDT", 
-            path_i: 0, p_i: 100.0, d_i: 150.0, level: warn
+            path_i: 0, p_i: 100.0, d_i: 200.0, level: warn
             }
         /localization/pose_estimator/pose_with_covariance: {
             mtype: "geometry_msgs/msg/PoseWithCovarianceStamped",
             path_name: "PCL=>NDT", 
-            path_i: 1, p_i: 100.0, d_i: 120.0, level: warn
+            path_i: 1, p_i: 100.0, d_i: 150.0, level: warn
             }
 ```
 |name|content|

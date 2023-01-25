@@ -25,15 +25,15 @@ namespace tilde_timing_monitor
 class MinMax {
   public:
     MinMax() {
-      mMax = mAccum = 0.0; 
+      mMax = mAccum = 0.0;
       mMin = 10000000.0;
       mCount = 0;
     }
     void addData(double data) {
       if(data <= 0.0) return;
-      mMin = std::min(mMin, data); 
-      mMax = std::max(mMax, data); 
-      mAccum += data; 
+      mMin = std::min(mMin, data);
+      mMax = std::max(mMax, data);
+      mAccum += data;
       mCount++;
     }
     double getMin(){return (mCount == 0)? 0: mMin;}

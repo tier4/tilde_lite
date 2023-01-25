@@ -33,4 +33,3 @@ def generate_launch_description():
         mtt_file_arg,
         mtt_checker
     ])
-

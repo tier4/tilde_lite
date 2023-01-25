@@ -1,24 +1,33 @@
 # tilde timing monitor (cpp)
+
 ### Detect timing violation specfication
+
 refered to "https://github.com/tier4/autoware.iv/blob/4c3d30ea3123daa2f4336606326c3efd0fbc5512/system/topic_state_monitor/README-realtime.md"
 
-## limitation:  
+## limitation
+
 A measurable path is only if the topic of the end point node holds the stamp of the start point node.In that case, the response time is from the stamp of the topic to the time when the measurement node subscribes it.
 If you use the TILDE message tracking tag, the response time will be the time until the topic is published, so it will be more accurate.
 
 ---
+
 ## environment
+
 - ros2: humble
 - fork of autoware foundation to TILDE
-  - repo:   https://github.com/xygyo77/tilde-autoware.git
+
+  - repo: <https://github.com/xygyo77/tilde-autoware.git>
   - branch: humble
+
   ```
   vcs import src << nrm-build.hashed.repos
   ```
+
 note: ndt_scan_matcher contains a unique change that outputs the latest EKF pose topic used during interpolation.
 
 ## install
-- repo: https://github.com/tier4/tilde_lite.git
+
+- repo: <https://github.com/tier4/tilde_lite.git>
 
 ```
 cd ~/colcon_ws
@@ -26,9 +35,12 @@ git clone https://github.com/tier4/tilde_lite.git
 cd tilde_lite
 colcon build --symlink-install
 ```
+
 ## operation
+
 - source ROS2/autoware environments
 - prepare path list yaml file (see. config/tilde_path_info.yaml)
+
 ```
 /**:
   ros__parameters:
@@ -36,29 +48,29 @@ colcon build --symlink-install
       test:
         /localization/pose_estimator/for_tilde_interpolator_mtt: {
             mtype: "tilde_msg/msg/MessageTrackingTag",
-            path_name: "EKF=>NDT", 
+            path_name: "EKF=>NDT",
             path_i: 0, p_i: 100.0, d_i: 150.0, level: warn
             }
         /localization/pose_estimator/pose_with_covariance: {
             mtype: "geometry_msgs/msg/PoseWithCovarianceStamped",
-            path_name: "PCL=>NDT", 
+            path_name: "PCL=>NDT",
             path_i: 1, p_i: 100.0, d_i: 120.0, level: warn
             }
 ```
-|name|content|
-|-|-|
-|required_paths|measurement path information|
-|mode (ex. test)|measurement path set id|
-|topic name|end point node published topic name|
-|mtype|message type|
-|path_name(any word)|the name given to the path|
-|path_i|path number|
-|p_i|periodic timer value (msec)|
-|d_i|deadline detect timer value (msec)|
-|level|diagnostic severity|
 
+| name                | content                             |
+| ------------------- | ----------------------------------- |
+| required_paths      | measurement path information        |
+| mode (ex. test)     | measurement path set id             |
+| topic name          | end point node published topic name |
+| mtype               | message type                        |
+| path_name(any word) | the name given to the path          |
+| path_i              | path number                         |
+| p_i                 | periodic timer value (msec)         |
+| d_i                 | deadline detect timer value (msec)  |
+| level               | diagnostic severity                 |
 
-- invoke logging simulator 
+- invoke logging simulator
 
 ```
 ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/data/sample-map-rosbag   vehicle_model:=sample_vehicle   sensor_model:=sample_sensor_kit rviz:=True
@@ -66,26 +78,32 @@ ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/d
 (wait for the nodes to come up...)
 ...
 ```
+
 - other terminal
+
 ```
 ros2 bag play /home/akm/data/sample-rosbag -r 0.2
 ```
+
 - tilde timing monitor
+
 ```
 source ~/colcon_ws/tilde_lite/install/local_setup.bash
 cp ~/colcon_ws/tilde_lite/src/tilde_timing_monitor/config/tilde_path_info.yaml .
 ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml mode:=test
 ```
-|param|value|content|default|
-|-|-|-|-|
-|mode|by config file|Measurement path type|test|
-|statistics|bool|statistics collection control|true|
+
+| param      | value          | content                       | default |
+| ---------- | -------------- | ----------------------------- | ------- |
+| mode       | by config file | Measurement path type         | test    |
+| statistics | bool           | statistics collection control | true    |
 
 ## output
 
 - deadline miss detected topic
 
- /tilde_timing_monitor/output/tilde_timing_monitor/deadline_miss
+/tilde_timing_monitor/output/tilde_timing_monitor/deadline_miss
+
 ```
 header:
   stamp:
@@ -113,9 +131,11 @@ mode: test
 ```
 
 - information and statistics topic
+
 ```
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: req info}' --once
 ```
+
 ```
 header:
   stamp:
@@ -203,20 +223,21 @@ cb_latency:
 ```
 
 ## command
+
 Publish tilde_timing_monitor commands as below.
 
-|command|contents|
-|---|---|
-|req info|publish infos and statistics topic|
-|show info|show infos and statistics on console|
-|show hist|show log|
-
-
+| command   | contents                             |
+| --------- | ------------------------------------ |
+| req info  | publish infos and statistics topic   |
+| show info | show infos and statistics on console |
+| show hist | show log                             |
 
 exsample show info
+
 ```
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: show info}' --once
 ```
+
 ```
 ----- statistics (v0.01) -----
 mode=test

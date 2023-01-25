@@ -49,4 +49,6 @@ repos:
     hooks:
       - id: hadolint
 
-exclude: .svg
+exclude: ^(.svg|\
+          src/mtt_checker/sample/tp-ekf-pose-CUR-AWF.yaml|\
+          src/mtt_checker/sample/tp-ekf-pose-PREV-AWF.yaml)

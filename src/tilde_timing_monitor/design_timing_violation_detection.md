@@ -70,7 +70,7 @@ which are not changed at run-time.
 
 ## Design
 
-The design of Topic State Monitor focuses on Requirement 1. Requirement 2 is designed in [Emergency Handler](../emergency_handler).
+The design of Topic State Monitor focuses on Requirement 1. Requirement 2 is designed in [Emergency Handler](https://github.com/autowarefoundation/autoware.universe/tree/main/system/emergency_handler).
 
 ![Introduction of Real-Time](image/design-realtime.drawio.svg)
 

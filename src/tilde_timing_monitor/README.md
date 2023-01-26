@@ -2,7 +2,7 @@
 
 ## Detect timing violation specfication
 
-refered to "https://github.com/tier4/autoware.iv/blob/4c3d30ea3123daa2f4336606326c3efd0fbc5512/system/topic_state_monitor/README-realtime.md"
+Refer to [the design page](./design_timing_violation_detection.md) for further details
 
 ## limitation
 

@@ -100,14 +100,14 @@ If user wants to detect a dead-line miss in the middle of a Path, user specify i
 ## Initialization Phase
 
 1. `Node S` sets `r_{i,j-1}` into a topic, and publishes the topic into `Path_i`.
-1. `Node N` and `Node E` relays `r_{i,j-1}` on topics without modification.
-1. Topic State Monitor saves `r_{i,j-1}` for the Detection Phase.
+2. `Node N` and `Node E` relays `r_{i,j-1}` on topics without modification.
+3. Topic State Monitor saves `r_{i,j-1}` for the Detection Phase.
 
 ## Detection Phase
 
 1. Topic State Monitor calculates `r_{i,j} = r{i,j-1} + p_i`.
-1. Topic State Monitor calculates the absolute deadline = `r_{i,j} + d_i`.
-1. If (1) Topic State Monitor does not subscribe the topic in `Path_i` and
+2. Topic State Monitor calculates the absolute deadline = `r_{i,j} + d_i`.
+3. If (1) Topic State Monitor does not subscribe the topic in `Path_i` and
 (2) the current time exceeds the absolute deadline, Topic State Monitor publishes the deadline miss event via `/diagnostics` topic.
 
 ## Implementation Challenge

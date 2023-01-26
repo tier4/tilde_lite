@@ -3,6 +3,7 @@
 **NOTE: It has not been implemented yet.**
 
 ## Description
+
 Autonomous driving is a real-time system. The **Topic State Monitor** checks the real-time constraints of the system. To achieve the real-time constraints, a certain monitoring functionality is required to detect when nodes are performing below tolerance and react appropriately.
 
 ![Introduction of Real-Time](image/introduction-realtime.drawio.svg)
@@ -10,14 +11,14 @@ Autonomous driving is a real-time system. The **Topic State Monitor** checks the
 This figure shows the high-level architecture of Autoware.
 An autonomous driving system consists of a set of functions.
 Each function would be implemented as a ROS node or a set of ROS nodes.
-A set of functions would have a real-time constraint. 
+A set of functions would have a real-time constraint.
 
-|[Path](https://en.wikipedia.org/wiki/Path_(graph_theory))|Real-Time Constraint|
-|---|---|
-|Sensors > Sensing > Perception > Planning > Control > Vehicle I/F > Vehicle|Brake reaction distance|
-|Planning > Control > Vehicle I/F > Vehicle|Braking distance accuracy|
-|Vehicle > Vehicle I/F > Control > Vehicle I/F > Vehicle|Control accuracy|
-|Sensors > Sensing > Localization|Localization accuracy|
+| [Path](<https://en.wikipedia.org/wiki/Path_(graph_theory)>)                 | Real-Time Constraint      |
+| --------------------------------------------------------------------------- | ------------------------- |
+| Sensors > Sensing > Perception > Planning > Control > Vehicle I/F > Vehicle | Brake reaction distance   |
+| Planning > Control > Vehicle I/F > Vehicle                                  | Braking distance accuracy |
+| Vehicle > Vehicle I/F > Control > Vehicle I/F > Vehicle                     | Control accuracy          |
+| Sensors > Sensing > Localization                                            | Localization accuracy     |
 
 This table shows examples of real-time constraints.
 Each column shows a real-time constraint corresponding to a path in the architecture graph.
@@ -26,7 +27,7 @@ Each column shows a real-time constraint corresponding to a path in the architec
 
 ![Formulation of Real-Time](image/formulation-realtime.drawio.svg)
 
-[A path in a graph is a finite sequence of edges which joins a sequence of vertices which are all distinct (and since the vertices are distinct, so are the edges)]((https://en.wikipedia.org/wiki/Path_(graph_theory))).
+[A path in a graph is a finite sequence of edges which joins a sequence of vertices which are all distinct (and since the vertices are distinct, so are the edges)](<(<https://en.wikipedia.org/wiki/Path_(graph_theory>))>).
 The words `trail` and `walk` are not used in this context since each node and edge would have only one role in a path
 even if they appear multiple times in the path.
 
@@ -56,10 +57,10 @@ which are not changed at run-time.
 
 ## Requirements
 
-|#|System Requirement|Related Component|
-|---|---|---|
-|Requirement 1|The system shall detect deadline misses (i.e., `l_{i,j} > d_i`).|Topic State Monitor|
-|Requirement 2|The system can trigger some actions once deadline misses are detected.|Emergency Handler|
+| #             | System Requirement                                                     | Related Component   |
+| ------------- | ---------------------------------------------------------------------- | ------------------- |
+| Requirement 1 | The system shall detect deadline misses (i.e., `l_{i,j} > d_i`).       | Topic State Monitor |
+| Requirement 2 | The system can trigger some actions once deadline misses are detected. | Emergency Handler   |
 
 ## Limitation
 
@@ -90,9 +91,10 @@ To determine using existing timestamp, it is needed to check the specifications 
 If it is difficult to use, add a new field for Dead-line miss detection.
 
 ### Early detection
+
 If user wants to detect a dead-line miss in the middle of a Path, user specify it by defining multiple Path as bwlow.
 
-- ex) Whole  `Path_i` is defined as: **`Node S` -> `Node N1` -> `Node N2` -> `Node E`**
+- ex) Whole `Path_i` is defined as: **`Node S` -> `Node N1` -> `Node N2` -> `Node E`**
   - early detect on Node S: define additional Path as `Node S`
   - early detect on Node N2: define additional Path as `Node S` -> `Node N1` -> `Node N2`
   - detect on Node E: `Node S` -> `Node N1` -> `Node N2` -> `Node E` (same as `Path_i`)
@@ -108,7 +110,7 @@ If user wants to detect a dead-line miss in the middle of a Path, user specify i
 1. Topic State Monitor calculates `r_{i,j} = r{i,j-1} + p_i`.
 1. Topic State Monitor calculates the absolute deadline = `r_{i,j} + d_i`.
 1. If (1) Topic State Monitor does not subscribe the topic in `Path_i` and
-(2) the current time exceeds the absolute deadline, Topic State Monitor publishes the deadline miss event via `/diagnostics` topic.
+   (2) the current time exceeds the absolute deadline, Topic State Monitor publishes the deadline miss event via `/diagnostics` topic.
 
 ## Implementation Challenge
 
@@ -121,6 +123,6 @@ If user wants to detect a dead-line miss in the middle of a Path, user specify i
 
 This section describes another design that is not employed.
 
-|Design|Reason why not employed|
-|---|---|
-|Topic State Monitor gets `r_{i,1}`, and calculates `r_{i,j} = r_{r,1} + p_i * (j - 1)`.|`r_{i,j}` might slip forward or backward gradually if `p_i` stored in Topic State Monitor is not accurate. |
+| Design                                                                                  | Reason why not employed                                                                                    |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Topic State Monitor gets `r_{i,1}`, and calculates `r_{i,j} = r_{r,1} + p_i * (j - 1)`. | `r_{i,j}` might slip forward or backward gradually if `p_i` stored in Topic State Monitor is not accurate. |

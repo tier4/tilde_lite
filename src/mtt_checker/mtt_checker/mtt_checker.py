@@ -139,7 +139,7 @@ def analyze(p_i, d_i):
                     print_desc(ana, t, "OK")
                 else:
                     print_desc(ana, t, "-- IGNORE --")
-                    
+
             ana.deadline_timer.clear()
         #
         # 今回のデッドラインタイマを設定する
@@ -165,7 +165,7 @@ def analyze(p_i, d_i):
     print(f"--- p_i={p_i * 1000:4.2f}(ms) d_i={d_i * 1000:4.2f}(ms) ---")
     print(f"--- p_i count={cnt:4} p_i in time={(to - fm) / p_i:4.3f} ---")
     print(f"--- ({len(whole_mtt):4}) OK:{ana.ok:3} NG:{ana.ng:3} pseudo OK:{ana.p_ok:3} pseudo NG:{ana.p_ng:3} completed_j={ana.ok+ana.p_ok+ana.ng+ana.p_ng:3} ---")
-        
+
 def print_line(ana, p_i, d_i, desc):
     print(f"{LOC()}|{ana.line:4}|{ana.rel_time:6f}|{ana.org_interval:6f}|{ana.pub_time:6f}|{ana.pub_interval:6f}|{ana.proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
     ana.stime.append(ana.rel_time)
@@ -173,11 +173,11 @@ def print_line(ana, p_i, d_i, desc):
 def print_next_line(ana, p_i, d_i, desc):
     print(f"{LOC()}|{ana.l2_line:4}|{ana.l2_rel_time:6f}|{ana.l2_org_interval:6f}|{ana.l2_pub_time:6f}|{ana.l2_pub_interval:6f}|{ana.l2_proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
     ana.stime.append(ana.rel_time)
-    
+
 def print_analyze(ana, p_i, d_i, desc):
     print(f"{LOC()}|p_i |{ana.next_rel_time:6f}|{ana.next_rel_time - ana.rel_time:6f}|{ana.next_rel_time + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
     ana.stime.append(ana.next_rel_time)
-    
+
 def print_periodic(ana, t, p_i, d_i, desc):
     print(f"{LOC()}|-p_i|{t:6f}|{t - ana.rel_time:6f}|{t + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
     ana.stime.append(t)
@@ -185,10 +185,10 @@ def print_periodic(ana, t, p_i, d_i, desc):
 def print_deadline_to(ana, t, desc):
     print(f"{LOC()}|-d_i|{t:.6f}|        |                 |        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
     ana.stime.append(t)
-    
+
 def print_desc(ana, dead, desc):
     print(f"{LOC()}|    |                 |        |{dead:.6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|")
-    
+
 def print_title():
     print(f"MTT: {whole_mtt[0].pub_topic}")
     print(f"ORG: {whole_mtt[0].org_topic}")
@@ -251,7 +251,7 @@ def simple_analyze(mtt, count, deadline_time):
     else:
         ok += 1
         m = f"OK.(Under {deadline_time})"
-    print(f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{pub_time:06f}| {interval_time2:06f}| {proc_time:06f}|{m}|")   
+    print(f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{pub_time:06f}| {interval_time2:06f}| {proc_time:06f}|{m}|")
 
 # ros2 treat rosbag utility
 def get_rosbag_options(path, serialization_format='cdr'):
@@ -338,7 +338,7 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
     else:
         print(f'--- OK={ok} Deadline miss={ng} mtt topic={count - 1} ---------------------------------')
     print(f'(END:{VER})---------------------------------')
-    
+
 #
 def main():
     parser = argparse.ArgumentParser(description=f"Check the deadline by Message tracking tag (mtt).",
@@ -348,7 +348,7 @@ def main():
     parser.add_argument('-m', '--mode', metavar='mode', default='normal', help='simple: check stamp only, normal: default')
     parser.add_argument('-p', '--periodic', metavar='time', type=float, default=100.0, help='periodic time default:100.0 (ms) use normal mode only')
     parser.add_argument('-d', '--deadline', metavar='time', type=float, default=200.0, help='deadline detect time default:200.0 (ms)')
-    parser.add_argument('-t', '--topic', metavar='name', type=str, default='for_tilde_interpolator_mtt', 
+    parser.add_argument('-t', '--topic', metavar='name', type=str, default='for_tilde_interpolator_mtt',
                          help='topic name: Specify the target topic if there are multiple MTTs in the rosbag. \
                          \ndefault: for_tilde_interpolator_mtt')
     args = parser.parse_args()
@@ -374,4 +374,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

@@ -13,7 +13,7 @@ An autonomous driving system consists of a set of functions.
 Each function would be implemented as a ROS node or a set of ROS nodes.
 A set of functions would have a real-time constraint.
 
-| [Path](https://en.wikipedia.org/wiki/Path_(graph_theory))                 | Real-Time Constraint      |
+| [Path](<https://en.wikipedia.org/wiki/Path_(graph_theory)>)                 | Real-Time Constraint      |
 | --------------------------------------------------------------------------- | ------------------------- |
 | Sensors > Sensing > Perception > Planning > Control > Vehicle I/F > Vehicle | Brake reaction distance   |
 | Planning > Control > Vehicle I/F > Vehicle                                  | Braking distance accuracy |
@@ -27,7 +27,7 @@ Each column shows a real-time constraint corresponding to a path in the architec
 
 ![Formulation of Real-Time](image/formulation-realtime.drawio.svg)
 
-[A path in a graph is a finite sequence of edges which joins a sequence of vertices which are all distinct (and since the vertices are distinct, so are the edges)](https://en.wikipedia.org/wiki/Path_(graph_theory)).
+[A path in a graph is a finite sequence of edges which joins a sequence of vertices which are all distinct (and since the vertices are distinct, so are the edges)](<https://en.wikipedia.org/wiki/Path_(graph_theory)>).
 The words `trail` and `walk` are not used in this context since each node and edge would have only one role in a path
 even if they appear multiple times in the path.
 

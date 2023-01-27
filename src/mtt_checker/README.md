@@ -1,8 +1,8 @@
 # tilde MTT checker
 
 tilde_timing_monitor の観測結果の妥当性をチェックするツール。
-NDT-interporate時のMTTトピックを記録したファイルを用意し、MTT に収集した EKF-stamp 情報から静的に解析する。
-入力には、MTTを記録したrosbagファイル、あるいは`ros2 topic echo target-mtt-topic`で収集したmttトピックのyamlファイルを使用する。
+NDT-interporate 時の MTT トピックを記録したファイルを用意し、MTT に収集した EKF-stamp 情報から静的に解析する。
+入力には、MTT を記録した rosbag ファイル、あるいは`ros2 topic echo target-mtt-topic`で収集した mtt トピックの yaml ファイルを使用する。
 
 ## environment & install
 
@@ -10,16 +10,16 @@ tilde_timing_monitor に同じ。
 
 ## sample
 
-MTTトピックを収集したサンプルを sampleディレクトリ配下に配置した。
+MTT トピックを収集したサンプルを sample ディレクトリ配下に配置した。
 
 - tp-ekf-pose-PREV-AWF.yaml  
-  旧AWF(10/28)ベース：f9ca032b226e5dd4a983f2e6171af32237b5911f で記録したMTT
+  旧 AWF(10/28)ベース：f9ca032b226e5dd4a983f2e6171af32237b5911f で記録した MTT
 - tp-ekf-pose-CUR-AWF.yaml  
-  新AWF(12/22)ベース：d34355c8d5ce26405546c183405f6fa0f76e001e で記録したMTT
+  新 AWF(12/22)ベース：d34355c8d5ce26405546c183405f6fa0f76e001e で記録した MTT
 
 ## operation
 
-sourceコマンドで、ros2、AWF および tilde_lite 環境を読み込む。
+source コマンドで、ros2、AWF および tilde_lite 環境を読み込む。
 
 ```bash
 ros2 run mtt_checker mtt_checker -h
@@ -46,7 +46,7 @@ options:
 
 出力結果(最終行辺り)  
 **シンプルモード**  
-MTTのstampとその間隔のみで簡易的にデッドラインミスを検出する
+MTT の stamp とその間隔のみで簡易的にデッドラインミスを検出する
 
 ```bash
 ros2 run mtt_checker mtt_checker tp-ekf-pose-PREV-AWF.yaml -d 200 -m simple
@@ -78,7 +78,7 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 ```
 
 **ノーマルモード**  
-シンプルモードに加えて、periodicタイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延や、CPU負荷による時刻遅れは考慮されない。
+シンプルモードに加えて、periodic タイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延や、CPU 負荷による時刻遅れは考慮されない。
 
 ```bash
 ros2 run mtt_checker mtt_checker tp-ekf-pose-PREV-AWF.yaml -p 100 -d 200 -m normal

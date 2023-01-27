@@ -1,109 +1,124 @@
-#ifndef TILDE_AGGREGATOR__TILDE_AGGREGATOR_CORE_HPP_
-#define TILDE_AGGREGATOR__TILDE_AGGREGATOR_CORE_HPP_
+#ifndef TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_
+#define TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_
 
 #include "builtin_interfaces/msg/time.hpp"
-#include "std_msgs/msg/header.hpp"
-#include "std_msgs/msg/string.hpp"
+#include "tilde_msg/msg/message_tracking_tag.hpp"
+#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_command.hpp"
+#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
+#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_infos.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialization.hpp>
 
-#include "tilde_msg/msg/message_tracking_tag.hpp"
-#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
-#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_infos.hpp"
-#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_command.hpp"
+#include "std_msgs/msg/header.hpp"
+#include "std_msgs/msg/string.hpp"
 
+#include <chrono>
 #include <deque>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
-#include <thread>
-#include <chrono>
 
 namespace tilde_timing_monitor
 {
-class MinMax {
-  public:
-    MinMax() {
-      mMax = mAccum = 0.0;
-      mMin = 10000000.0;
-      mCount = 0;
-    }
-    void addData(double data) {
-      if(data <= 0.0) return;
-      mMin = std::min(mMin, data);
-      mMax = std::max(mMax, data);
-      mAccum += data;
-      mCount++;
-    }
-    double getMin(){return (mCount == 0)? 0: mMin;}
-    double getMax(){return mMax;}
-    double getAve(){return mAccum/std::max((uint64_t)1,mCount);}
-    uint64_t getCnt(){return mCount;}
-    std::string getName(){return mName;}
-    void setName(const char *name){
-      mName = name;
-      mMin = 10000000.0;
-    }
-  protected:
-    std::string mName;
-    double mMin, mMax, mAccum;
-    std::chrono::system_clock::time_point mPrev;
-    uint64_t mCount;
+class MinMax
+{
+public:
+  MinMax()
+  {
+    mMax = mAccum = 0.0;
+    mMin = 10000000.0;
+    mCount = 0;
+  }
+  void addData(double data)
+  {
+    if (data <= 0.0) return;
+    mMin = std::min(mMin, data);
+    mMax = std::max(mMax, data);
+    mAccum += data;
+    mCount++;
+  }
+  double getMin() { return (mCount == 0) ? 0 : mMin; }
+  double getMax() { return mMax; }
+  double getAve() { return mAccum / std::max((uint64_t)1, mCount); }
+  uint64_t getCnt() { return mCount; }
+  std::string getName() { return mName; }
+  void setName(const char * name)
+  {
+    mName = name;
+    mMin = 10000000.0;
+  }
+
+protected:
+  std::string mName;
+  double mMin, mMax, mAccum;
+  std::chrono::system_clock::time_point mPrev;
+  uint64_t mCount;
 };
 
-class RateMinMax : public MinMax {
-  public:
-    void addRate(double & pub_time, double & limit) {
-      if(mPrevPub == 0.0) {
-        mPrevPub = pub_time;
-        return;
-      }
-      auto elapse = pub_time - mPrevPub;
-      addData(elapse);
+class RateMinMax : public MinMax
+{
+public:
+  void addRate(double & pub_time, double & limit)
+  {
+    if (mPrevPub == 0.0) {
       mPrevPub = pub_time;
-      if(elapse >= limit) {
-        over_count++;
-        over_per_limit += elapse / limit;
-      }
+      return;
     }
-    void setName(const char *name) {
-      mName = name;
-      mMin = 10000000.0;
-      over_count = 0;
-      over_per_limit = 0;
+    auto elapse = pub_time - mPrevPub;
+    addData(elapse);
+    mPrevPub = pub_time;
+    if (elapse >= limit) {
+      over_count++;
+      over_per_limit += elapse / limit;
     }
-    uint64_t getOver() {return over_count;}
-    uint64_t getPerLimit() {return over_per_limit;}
-    void setPrev(double & pub_time){mPrevPub = pub_time;}
-  private:
-    double mPrevPub;
-    uint64_t over_count;
-    uint64_t over_per_limit;
+  }
+  void setName(const char * name)
+  {
+    mName = name;
+    mMin = 10000000.0;
+    over_count = 0;
+    over_per_limit = 0;
+  }
+  uint64_t getOver() { return over_count; }
+  uint64_t getPerLimit() { return over_per_limit; }
+  void setPrev(double & pub_time) { mPrevPub = pub_time; }
+
+private:
+  double mPrevPub;
+  uint64_t over_count;
+  uint64_t over_per_limit;
 };
 
-class ElapseMinMax : public MinMax {
-  public:
-    void addElapse() {
-      auto cur = std::chrono::system_clock::now();
-      auto elapse_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(cur - mPrev).count();
-      auto elapse = static_cast<double>(elapse_duration);
-      elapse /= (1000*1000*1000);
-      addData(elapse);
-    }
-    void setName(const char *name) {
-      mName = name;
-      mMin = 10000000.0;
-    }
-    void setPrev(){mPrev = std::chrono::system_clock::now();}
-  private:
-    std::chrono::system_clock::time_point mPrev;
+class ElapseMinMax : public MinMax
+{
+public:
+  void addElapse()
+  {
+    auto cur = std::chrono::system_clock::now();
+    auto elapse_duration =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(cur - mPrev).count();
+    auto elapse = static_cast<double>(elapse_duration);
+    elapse /= (1000 * 1000 * 1000);
+    addData(elapse);
+  }
+  void setName(const char * name)
+  {
+    mName = name;
+    mMin = 10000000.0;
+  }
+  void setPrev() { mPrev = std::chrono::system_clock::now(); }
+
+private:
+  std::chrono::system_clock::time_point mPrev;
 };
 
 using MessageTrackingTag = tilde_msg::msg::MessageTrackingTag;
 using CbstatisMap = std::map<std::string, ElapseMinMax>;
 
-struct DeadlineTimer {
+struct DeadlineTimer
+{
   int64_t self_j;
   double start_time;
   double timer_val;
@@ -114,8 +129,13 @@ struct DeadlineTimer {
 
 using DeadlineTimerMap = std::map<uint64_t, DeadlineTimer>;
 
-enum class e_stat {ST_NONE, ST_INIT, ST_DETECT,};
-class TildePathConfig {
+enum class e_stat {
+  ST_NONE,
+  ST_INIT,
+  ST_DETECT,
+};
+class TildePathConfig
+{
 public:
   std::string path_name;
   uint64_t path_i;
@@ -125,7 +145,8 @@ public:
   double d_i;
   std::string level;
   std::shared_ptr<std::mutex> tm_mutex;
-  TildePathConfig() {
+  TildePathConfig()
+  {
     std::shared_ptr<std::mutex> mtx(new std::mutex);
     status = e_stat::ST_NONE;
     cur_j = 0l;
@@ -219,18 +240,22 @@ private:
   void topicCallback(TildePathConfig & pinfo, double & cur_ros, double & pub_time);
 
   // Publisher
-  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr pub_tilde_deadline_miss_;
-  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos>::SharedPtr pub_tm_statistics_;
-  void pubDeadlineMiss(TildePathConfig & pinfo, uint64_t self_j, double start, bool presumed=false);
+  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr
+    pub_tilde_deadline_miss_;
+  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos>::SharedPtr
+    pub_tm_statistics_;
+  void pubDeadlineMiss(
+    TildePathConfig & pinfo, uint64_t self_j, double start, bool presumed = false);
 
   // for statistics and debug
-  void onCommand(const tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg);
+  void onCommand(
+    const tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg);
   void pubCmdReqInfo();
   void respTimeStatis(TildePathConfig & pinfo, double & response_time);
   void tooLongRespTimeStatis(TildePathConfig & pinfo, double & response_time);
   bool topicStatis(TildePathConfig & pinfo, double & s_stamp, double & cur_ros);
-  void cbStatisEnter(const char *func);
-  void cbStatisExit(const char *func);
+  void cbStatisEnter(const char * func);
+  void cbStatisExit(const char * func);
   void cmdShowStatis();
 
   // others (debug)
@@ -242,5 +267,5 @@ private:
   void pseudoRosTimeInit();
 };
 
-} // namespace tilde_timing_monitor
-#endif  // TILDE_AGGREGATOR__TILDE_AGGREGATOR_CORE_HPP_
+}  // namespace tilde_timing_monitor
+#endif  // TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_

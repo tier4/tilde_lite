@@ -65,8 +65,8 @@ which are not changed at run-time.
 ## Limitation
 
 - The relative deadline `d_i` of `Path_i` has static value. `d_i` does not change at runtime with change in for example the velocity of ego-vehicle. This limitation comes from the assumption that `d_i` shall be the minimum value that can be safe in a given ODD.
-- Not interupt callback or node execution
-- Not control over error handling outside of autoware (e.g. anomal detection using heart-beats on the hardware side)
+- Not interrupt callback or node execution
+- Not control over error handling outside of autoware (e.g. normal detection using heart-beats on the hardware side)
 
 ## Design
 
@@ -86,13 +86,13 @@ the absolute deadline of `j`-th job in the detection phase.
 The initialization phase and the detection phase are executed at every `j`.
 
 Existing timestamp value in each topic may not fit for Dead-line miss detection.
-Since topic's timestamp may be passed to the next node unchanged from the previous value, or it may be overwritten in current topic. It depentds on each node's specification.
+Since topic's timestamp may be passed to the next node unchanged from the previous value, or it may be overwritten in current topic. It depends on each node's specification.
 To determine using existing timestamp, it is needed to check the specifications of all the nodes in the Path.
 If it is difficult to use, add a new field for Dead-line miss detection.
 
 ### Early detection
 
-If user wants to detect a dead-line miss in the middle of a Path, user specify it by defining multiple Path as bwlow.
+If user wants to detect a dead-line miss in the middle of a Path, user specify it by defining multiple Path as below.
 
 - ex) Whole `Path_i` is defined as: **`Node S` -> `Node N1` -> `Node N2` -> `Node E`**
   - early detect on Node S: define additional Path as `Node S`

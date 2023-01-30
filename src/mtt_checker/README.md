@@ -1,9 +1,11 @@
 # tilde MTT checker
+
 tilde_timing_monitor の観測結果の妥当性をチェックするツール。
-NDT-interporate時のMTTトピックを記録したファイルを用意し、MTT に収集した EKF-stamp 情報から静的に解析する。
-入力には、MTTを記録したrosbagファイル、あるいは`ros2 topic echo target-mtt-topic`で収集したmttトピックのyamlファイルを使用する。
+NDT-interporate 時の MTT トピックを記録したファイルを用意し、MTT に収集した EKF-stamp 情報から静的に解析する。
+入力には、MTT を記録した rosbag ファイル、あるいは`ros2 topic echo target-mtt-topic`で収集した mtt トピックの yaml ファイルを使用する。
 
 ## environment & install
+
 tilde_timing_monitor に同じ。
 
 ## sample
@@ -13,8 +15,10 @@ MTTトピックを収集したサンプルを sampleディレクトリ配下に�
 起動15秒後にstressコマンドで負荷を掛けてデッドラインミスを発生させてrosbagに記録    
 
 ## operation
-sourceコマンドで、ros2、AWF および tilde_lite 環境を読み込む。
-```
+
+source コマンドで、ros2、AWF および tilde_lite 環境を読み込む。
+
+```bash
 ros2 run mtt_checker mtt_checker -h
 usage: ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file
 
@@ -71,6 +75,7 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 --- OK=163 Deadline miss=224 mtt topic=247 ---------------------------------
 (END:v0.11)---------------------------------
 ```
+
 **ノーマルモード**  
 シンプルモードに加えて、periodicタイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延は考慮されない。
 ```

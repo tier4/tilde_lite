@@ -1,15 +1,16 @@
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 
-#include <signal.h>
-
 #include <rclcpp/rclcpp.hpp>
 
-static void signal_handler(int signum) {
-    printf("signal_handler: caught signal %d\n", signum);
-    if (signum == SIGINT) {
-        printf("--- SIGINT ---\n");
-        exit(1);
-    }
+#include <signal.h>
+
+static void signal_handler(int signum)
+{
+  printf("signal_handler: caught signal %d\n", signum);
+  if (signum == SIGINT) {
+    printf("--- SIGINT ---\n");
+    exit(1);
+  }
 }
 
 int main(int argc, char ** argv)

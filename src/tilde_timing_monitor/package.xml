@@ -4,13 +4,13 @@
   <name>tilde_timing_monitor</name>
   <version>0.0.0</version>
   <description>The tilde_timing_monitor package in ROS2</description>
-  <maintainer email="akm@isp.co.jp"></maintainer>
+  <maintainer email="akm@isp.co.jp"/>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <depend>fmt</depend>
   <depend>rclcpp</depend>
   <depend>tilde_msg</depend>
-  <depend>fmt</depend>
   <depend>tilde_timing_monitor_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>

@@ -1,9 +1,16 @@
 from glob import glob
 import os
 
+from warnings import simplefilter
+
+from pkg_resources import PkgResourcesDeprecationWarning
+from setuptools import SetuptoolsDeprecationWarning
 from setuptools import setup
 
 package_name = "mtt_checker"
+
+simplefilter("ignore", category=SetuptoolsDeprecationWarning)
+simplefilter("ignore", category=PkgResourcesDeprecationWarning)
 
 setup(
     name=package_name,

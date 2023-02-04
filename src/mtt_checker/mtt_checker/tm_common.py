@@ -35,14 +35,6 @@ COMMAND_DEBUG_ON = "debug on"
 COMMAND_DEBUG_OFF = "debug off"
 
 def LOC(depth=0):
-    """Get execute loaction (file name & line number)
-
-    Args:
-        depth (int, optional): _description_. Defaults to 0.
-
-    Returns:
-        _type_: function name & line number
-    """
     if DEBUG:
         frame = inspect.currentframe().f_back
         loc = f"[{frame.f_code.co_name:18}:{frame.f_lineno:04}]"
@@ -51,19 +43,10 @@ def LOC(depth=0):
         return ""
 
 def location(depth=0):
-    """Get execute loaction (file name & line number)
-
-    Args:
-        depth (int, optional): _description_. Defaults to 0.
-
-    Returns:
-        _type_: file name function name & line number
-    """
     frame = inspect.currentframe().f_back
     return os.path.basename(frame.f_code.co_filename), frame.f_code.co_name, frame.f_lineno, "---"
 
 def init_debug():
-    """DEBUG enabling by environment variable 'export PRM_DEBUG=True'"""
     global DEBUG
 
     v = os.getenv(TILDE_TM_DEBUG, default=False)
@@ -75,11 +58,6 @@ def init_debug():
         DEBUG = False
 
 def DP(dstr=None, level=DEBUG_LEVEL_DEBUG):
-    """Debug print control
-
-    Args:
-        args: same print() arguments
-    """
     if DEBUG:
         if level >= g_debug_level:
             tid = _thread.get_ident()
@@ -96,11 +74,6 @@ def DP(dstr=None, level=DEBUG_LEVEL_DEBUG):
             g_tid_prev_time.update({tid: cur})
 
 def PP(dstr):
-    """Info print control
-
-    Args:
-        args: same print() arguments
-    """
     tid = _thread.get_ident()
     if tid not in g_tid_prev_time.keys():
         g_tid_prev_time.update({tid: 0.0})
@@ -156,10 +129,10 @@ def hist_log(m):
         print(f"{m}", flush=True)
 
 def show_hist(command, node):
-    print(f"\n--- start history ---\n")
+    print("\n--- start history ---\n")
     for w in hist_buf:
         print(w)
-    print(f"\n---(END)---\n", flush=True)
+    print("\n---(END)---\n", flush=True)
 
 def clr_hist(command):
     global hist_buf

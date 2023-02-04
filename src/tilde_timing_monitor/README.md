@@ -29,7 +29,7 @@ note: ndt_scan_matcher contains a unique change that outputs the latest EKF pose
 
 - repo: <https://github.com/tier4/tilde_lite.git>
 
-```
+```bash
 cd ~/colcon_ws
 git clone https://github.com/tier4/tilde_lite.git
 cd tilde_lite
@@ -41,7 +41,7 @@ colcon build --symlink-install
 Extend receive buffer size.
 
 cyclonedds_config.xml
-```
+```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config
 https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
@@ -53,7 +53,7 @@ https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclo
 </CycloneDDS>
 ```
 
-```
+```bash
 export CYCLONEDDS_URI=file:///absolute/path/to/cyclonedds_config.xml
 sudo sysctl -w net.core.rmem_max=2147483647
 ```

@@ -155,7 +155,7 @@ private:
   void pubDeadlineMiss(
     TildePathConfig & pinfo, int64_t & self_j, double & start, bool presumed = false);
 
-  void ajustPseudoRosTime();
+  void adjustPseudoRosTime();
   void pseudoRosTimeInit();
 };
 

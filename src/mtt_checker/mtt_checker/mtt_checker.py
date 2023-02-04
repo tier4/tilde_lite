@@ -30,7 +30,7 @@ class MttInfo1line:
 
 whole_mtt = []
 @dataclass(frozen=False)
-class MttTimingAnalizer:
+class MttTimingAnalyzer:
     ok: int = 0
     p_ok: int = 0
     ng: int = 0
@@ -60,7 +60,7 @@ class MttTimingAnalizer:
 
 def analyze(p_i, d_i):
     print_title()
-    ana = MttTimingAnalizer()
+    ana = MttTimingAnalyzer()
     skip = 0
     for idx, ln in enumerate(whole_mtt):
         if skip > 0:
@@ -84,7 +84,7 @@ def analyze(p_i, d_i):
         ana.next_rel_time = ana.rel_time + p_i
         ana.proc_time = ana.pub_time - ana.rel_time
         if ana.proc_time > d_i or ana.org_interval > d_i or ana.pub_interval > d_i:
-            print_line(ana, p_i, d_i, "fail: deadline miss occured")
+            print_line(ana, p_i, d_i, "fail: deadline miss")
             continue
         print_line(ana, p_i, d_i, "")
         ana.l2_prev_rel_time = ana.rel_time
@@ -99,7 +99,7 @@ def analyze(p_i, d_i):
             ana.l2_proc_time = ana.l2_pub_time - ana.l2_rel_time
             # print(f"--- [{ana.l2_line}]{ana.l2_org_interval=} {ana.l2_pub_interval=} {ana.l2_proc_time=} ---")
             if ana.l2_org_interval > d_i or ana.l2_pub_interval > d_i or ana.l2_proc_time > d_i:
-                print_next_line(ana, p_i, d_i, "skip: deadline miss occured")
+                print_next_line(ana, p_i, d_i, "skip: deadline miss")
                 ana.l2_prev_rel_time = ana.l2_rel_time
                 ana.l2_prev_pub_time = ana.l2_pub_time
                 ana.prev_rel_time = ana.l2_rel_time
@@ -109,8 +109,8 @@ def analyze(p_i, d_i):
             break
         else:
             print_line(ana, p_i, d_i, "one before last line")
-        # analize
-        # 前回設定したデッドラインタイマをチェックする
+        # analyze
+        # check the prev deadline timers
         if skip == 0:
             first = False
             for t in ana.deadline_timer:
@@ -125,7 +125,7 @@ def analyze(p_i, d_i):
 
             ana.deadline_timer.clear()
         #
-        # 今回のデッドラインタイマを設定する
+        # set current deadline timers
         #print_analyze(ana, p_i, d_i, "")
         for t in np.arange(ana.rel_time + p_i, ana.l2_rel_time, p_i):
             if t + d_i < ana.l2_rel_time + ana.l2_proc_time:
@@ -249,12 +249,12 @@ def get_rosbag_options(path, serialization_format="cdr"):
 
     return storage_options, converter_options
 
-def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
-    if input.endswith(".yaml"):
+def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
+    if in_file.endswith(".yaml"):
         mtt = MessageTrackingTag()
         try:
             count = 0
-            with open(input, "r") as f:
+            with open(in_file, "r") as f:
                 ydata = yaml.load_all(f, Loader=yaml.FullLoader)
                 for mtt in ydata:
                     count += 1
@@ -276,21 +276,21 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
             sys.exit(-1)
     else:
         try:
-            storage_options, converter_options = get_rosbag_options(input)
+            storage_options, converter_options = get_rosbag_options(in_file)
             # print('storage_options=%s, converter_options=%s' % (storage_options, converter_options))
             reader = rosbag2_py.SequentialReader()
             reader.open(storage_options, converter_options)
             topic_types = reader.get_all_topics_and_types()
             type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
         except Exception as e:
-            print(f"{location()}[Exception] {e} input file not rosbag {input}", file=sys.stderr)
+            print(f"{location()}[Exception] {e} input file not rosbag {in_file}", file=sys.stderr)
             sys.exit(-1)
         count = 0
         while reader.has_next():
             try:
                 (topic, data, t) = reader.read_next()  # これら3つの要素をタプルで返す
                 # print('topic=%s t=%s' % (topic, t))
-                if not mtt_topic in topic:
+                if mtt_topic not in topic:
                     continue
                 if "mtt" in topic or "message_tracking_tag" in topic:
                     # print(f"OLD {t}")
@@ -327,7 +327,7 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
     
 #
 def main():
-    parser = argparse.ArgumentParser(description=f"Check the deadline by Message tracking tag (mtt).",
+    parser = argparse.ArgumentParser(description="Check the deadline by Message tracking tag (mtt).",
                                      usage="ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file"
                                     )
     parser.add_argument('input', metavar='input', help='Input rosbag or MTT yaml file')

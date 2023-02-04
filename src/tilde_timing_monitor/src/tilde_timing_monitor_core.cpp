@@ -285,7 +285,7 @@ bool TildeTimingMonitor::isOverDeadline(
   return over_f;
 }
 
-// check the exsiting all timers
+// check the existing all timers
 void TildeTimingMonitor::checkExistingTimers(TildePathConfig & pinfo)
 {
   pinfo.r_i_j = pinfo.r_i_j_1 + pinfo.p_i;
@@ -346,7 +346,7 @@ void TildeTimingMonitor::restartTimers(TildePathConfig & pinfo, double & cur_ros
     pinfo.periodic_timer_val = next_periodic_start - cur_ros;
   } else {
     RCLCPP_WARN(
-      get_logger(), "[%s]:%04d ## perioic start error ros_cur=%lf next_periodic_start=%lf",
+      get_logger(), "[%s]:%04d ## periodic start error ros_cur=%lf next_periodic_start=%lf",
       __func__, __LINE__, cur_ros, next_periodic_start);
   }
   startIntervalTimer(pinfo, pinfo.periodic_timer_val);
@@ -576,7 +576,7 @@ double TildeTimingMonitor::get_now()
          (nano_to_sec(steady_clock_->now().nanoseconds()) - init_dur_pseudo_ros_time);
 }
 
-void TildeTimingMonitor::ajustPseudoRosTime()
+void TildeTimingMonitor::adjustPseudoRosTime()
 {
   RCLCPP_INFO(get_logger(), "%s:%04d\n", __func__, __LINE__);
   for (int i = 0; i < 100; i++) {
@@ -602,7 +602,7 @@ void TildeTimingMonitor::pseudoRosTimeInit()
   }
   steady_clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
   init_dur_pseudo_ros_time = nano_to_sec(steady_clock_->now().nanoseconds());
-  ajustPseudoRosTime();
+  adjustPseudoRosTime();
   RCLCPP_INFO(get_logger(), "%s:%04d\n", __func__, __LINE__);
 
   RCLCPP_INFO(

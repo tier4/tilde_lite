@@ -17,7 +17,7 @@ tilde_timing_monitor に同じ。
 
 source コマンドで、ros2、AWF および tilde_lite 環境を読み込む。
 
-```
+```bash
 ros2 run mtt_checker mtt_checker -h
 usage: ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file
 
@@ -41,7 +41,7 @@ options:
 **シンプルモード**  
 MTT の stamp とその間隔のみで簡易的にデッドラインミスを検出する
 
-```
+```bash
 ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m simple -p 100 -d 200 -t for_tilde_interpolator_mtt 
 ### DEBUG=False
 --- STAR### DEBUG=False
@@ -72,7 +72,7 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 ```
 **ノーマルモード**  
 シンプルモードに加えて、periodic タイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延は考慮されない。
-```
+```bash
 ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m normal -p 100 -d 200 -t for_tilde_interpolator_mtt 
 ### DEBUG=False
 [WARN] [1674613470.464989912] [rosbag2_storage]: No storage plugin found with id 'sqlite3'.

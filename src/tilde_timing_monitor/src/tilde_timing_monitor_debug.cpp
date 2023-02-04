@@ -112,7 +112,7 @@ void TildeTimingMonitorDebug::cmdShowStatis()
       dinfo_ptr->sub_interval.getOver(), dinfo_ptr->sub_interval.getPerLimit());
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format(
-      "commnication delay({}) min={} ave={} max={} (sec)", dinfo_ptr->com_delay.getCnt(),
+      "communication delay({}) min={} ave={} max={} (sec)", dinfo_ptr->com_delay.getCnt(),
       dinfo_ptr->com_delay.getMin(), dinfo_ptr->com_delay.getAve(), dinfo_ptr->com_delay.getMax());
     std::cout << fs.c_str() << std::endl;
     std::cout << "-- deadline timer ---" << std::endl;

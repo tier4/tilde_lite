@@ -50,8 +50,7 @@ struct DeadlineTimer
 
 using DeadlineTimerMap = std::map<uint64_t, DeadlineTimer>;
 
-enum class e_stat
-{
+enum class e_stat {
   ST_NONE,
   ST_INIT,
   ST_DETECT,
@@ -113,11 +112,12 @@ class TildeTimingMonitor : public rclcpp::Node
 {
 public:
   TildeTimingMonitor();
-  bool get_debug_param() {return params_.debug_ctrl;}
-  bool get_ros_time_param() {return params_.pseudo_ros_time;}
-  std::string get_mode_param() {return params_.mode;}
-  
+  bool get_debug_param() { return params_.debug_ctrl; }
+  bool get_ros_time_param() { return params_.pseudo_ros_time; }
+  std::string get_mode_param() { return params_.mode; }
+
   double get_now();
+
 private:
   struct Parameters
   {

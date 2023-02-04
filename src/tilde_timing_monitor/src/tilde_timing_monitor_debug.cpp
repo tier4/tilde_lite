@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
+
+#include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 
 #define FMT_HEADER_ONLY
 #include <fmt/format.h>
@@ -42,20 +43,21 @@ void TildeTimingMonitorDebug::registerPathDebugInfo(
 
 // TildeTimingMonitorDebug constructor
 TildeTimingMonitorDebug::TildeTimingMonitorDebug(
-  TildeTimingMonitor *node, const char *version, bool debug_ctrl)
+  TildeTimingMonitor * node, const char * version, bool debug_ctrl)
 : node(node), version(version), debug_ctrl(debug_ctrl)
 {
   rclcpp::QoS qos = rclcpp::QoS{1};
   // Publisher
   pub_tm_statistics_ =
     node->create_publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos>(
-    "~/output/tilde_timing_monitor/statistics", qos);
+      "~/output/tilde_timing_monitor/statistics", qos);
   // command topic
-  cmd_sub_ = node->create_subscription<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand>(
-    tm_command_topic, qos,
-    [this](tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg) {
-      TildeTimingMonitorDebug::onCommand(msg);
-    });
+  cmd_sub_ =
+    node->create_subscription<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand>(
+      tm_command_topic, qos,
+      [this](tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg) {
+        TildeTimingMonitorDebug::onCommand(msg);
+      });
   RCLCPP_INFO(node->get_logger(), "\n\n--- DEBUG ---\n");
 }
 
@@ -73,10 +75,10 @@ void TildeTimingMonitorDebug::cmdShowStatis()
       "path_name={} path_i={} p_i={}(ms) d_i={}(ms)", pinfo_ptr->path_name.c_str(),
       pinfo_ptr->path_i, pinfo_ptr->p_i * 1000, pinfo_ptr->d_i * 1000);
     std::cout << fs.c_str() << std::endl;
-    fs = fmt::format(
-      "topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
+    fs = fmt::format("topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
     std::cout << fs.c_str() << std::endl;
-    fs = fmt::format("path OK={} NG={}", pinfo_ptr->completed_count,
+    fs = fmt::format(
+      "path OK={} NG={}", pinfo_ptr->completed_count,
       pinfo_ptr->deadline_miss_count + pinfo_ptr->presumed_deadline_miss_count);
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("path completed={}", pinfo_ptr->completed_count);
@@ -95,8 +97,7 @@ void TildeTimingMonitorDebug::cmdShowStatis()
       dinfo_ptr->too_long_response_time.getCnt(), dinfo_ptr->too_long_response_time.getMin(),
       dinfo_ptr->too_long_response_time.getAve(), dinfo_ptr->too_long_response_time.getMax());
     std::cout << fs.c_str() << std::endl;
-    fs = fmt::format(
-      "cur_j={} completed_j={}", pinfo_ptr->cur_j, pinfo_ptr->completed_j);
+    fs = fmt::format("cur_j={} completed_j={}", pinfo_ptr->cur_j, pinfo_ptr->completed_j);
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("r_i_j_1={} r_i_j={}", pinfo_ptr->r_i_j_1, pinfo_ptr->r_i_j);
     std::cout << fs.c_str() << std::endl;
@@ -276,7 +277,9 @@ void TildeTimingMonitorDebug::log(std::string fs)
   if (log_disp) {
     RCLCPP_INFO(this->node->get_logger(), fs.c_str());
   }
-  if (!enable_log) {return;}
+  if (!enable_log) {
+    return;
+  }
   double cur_ros = this->node->get_now();
   log_buffer_.push_back(fmt::format("[{:.6f}] {}", cur_ros, fs.c_str()));
   if (log_buffer_.size() >= 1000 * 100) {
@@ -290,7 +293,7 @@ void TildeTimingMonitorDebug::printLog()
     std::cout << fs.c_str() << std::endl;
   }
 }
-void TildeTimingMonitorDebug::enLog(bool ope) {enable_log = ope;}
-void TildeTimingMonitorDebug::dispLogCtrl(bool ope) {log_disp = ope;}
+void TildeTimingMonitorDebug::enLog(bool ope) { enable_log = ope; }
+void TildeTimingMonitorDebug::dispLogCtrl(bool ope) { log_disp = ope; }
 
 }  // namespace tilde_timing_monitor

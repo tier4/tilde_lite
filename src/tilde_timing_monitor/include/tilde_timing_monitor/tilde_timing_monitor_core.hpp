@@ -50,8 +50,7 @@ struct DeadlineTimer
 
 using DeadlineTimerMap = std::unordered_map<uint64_t, DeadlineTimer>;
 
-enum class e_stat
-{
+enum class e_stat {
   ST_NONE,
   ST_INIT,
   ST_DETECT,
@@ -105,11 +104,12 @@ class TildeTimingMonitor : public rclcpp::Node
 {
 public:
   TildeTimingMonitor();
-  bool get_debug_param() {return params_.debug_ctrl;}
-  bool get_ros_time_param() {return params_.pseudo_ros_time;}
-  std::string get_mode_param() {return params_.mode;}
-  
+  bool get_debug_param() { return params_.debug_ctrl; }
+  bool get_ros_time_param() { return params_.pseudo_ros_time; }
+  std::string get_mode_param() { return params_.mode; }
+
   double get_now();
+
 private:
   struct Parameters
   {
@@ -129,8 +129,10 @@ private:
   // Subscriber
   void onMttTopic(const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo);
   void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo);
-  void topicCallback(TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
-  bool isOverDeadline(TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
+  void topicCallback(
+    TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
+  bool isOverDeadline(
+    TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
   void checkExistingTimers(TildePathConfig & pinfo);
   void restartTimers(TildePathConfig & pinfo, double & cur_ros);
   // Timer
@@ -144,7 +146,7 @@ private:
   // Publisher
   rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr
     pub_tilde_deadline_miss_;
-  void pubDeadlineMiss( TildePathConfig & pinfo, int64_t & self_j, double & start);
+  void pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self_j, double & start);
 
   void adjustPseudoRosTime();
   void pseudoRosTimeInit();

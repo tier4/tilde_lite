@@ -21,23 +21,22 @@
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_infos.hpp"
 
-#include <rclcpp/rclcpp.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialization.hpp>
 
 #include "std_msgs/msg/header.hpp"
 #include "std_msgs/msg/string.hpp"
 
-
-#include <memory>
+#include <cfloat>
 #include <chrono>
 #include <deque>
+#include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <map>
-#include <cfloat>
 
 namespace tilde_timing_monitor
 {
@@ -52,29 +51,33 @@ public:
   }
   void addData(double data)
   {
-    if(data <= 0.0) {return;}
-    mMin = std::min(mMin, data); 
-    mMax = std::max(mMax, data); 
-    mAccum += data; 
-    mCount++;
-  }
-  void addData(double data, double limit)
-  {
-    if (data <= 0.0) {return;}
+    if (data <= 0.0) {
+      return;
+    }
     mMin = std::min(mMin, data);
     mMax = std::max(mMax, data);
     mAccum += data;
     mCount++;
-    if(data >= limit) {
+  }
+  void addData(double data, double limit)
+  {
+    if (data <= 0.0) {
+      return;
+    }
+    mMin = std::min(mMin, data);
+    mMax = std::max(mMax, data);
+    mAccum += data;
+    mCount++;
+    if (data >= limit) {
       over_count++;
       over_per_limit += data / limit;
     }
   }
-  double getMin() {return (mCount == 0) ? 0 : mMin;}
-  double getMax() {return mMax;}
-  double getAve() {return mAccum / std::max((uint64_t)1, mCount);}
-  uint64_t getCnt() {return mCount;}
-  std::string getName() {return mName;}
+  double getMin() { return (mCount == 0) ? 0 : mMin; }
+  double getMax() { return mMax; }
+  double getAve() { return mAccum / std::max((uint64_t)1, mCount); }
+  uint64_t getCnt() { return mCount; }
+  std::string getName() { return mName; }
   void setName(const char * name)
   {
     mName = name;
@@ -84,8 +87,8 @@ public:
     mCount = 0ul;
     over_count = over_per_limit = 0ul;
   }
-  uint64_t getOver() {return over_count;}
-  uint64_t getPerLimit() {return over_per_limit;}
+  uint64_t getOver() { return over_count; }
+  uint64_t getPerLimit() { return over_per_limit; }
 
 protected:
   std::string mName;
@@ -118,7 +121,7 @@ public:
     over_count = over_per_limit = 0ul;
     mPrevPub = 0.0;
   }
-  void setPrev(double & pub_time) {mPrevPub = pub_time;}
+  void setPrev(double & pub_time) { mPrevPub = pub_time; }
 
 private:
   double mPrevPub;
@@ -136,7 +139,7 @@ public:
     elapse /= (1000 * 1000 * 1000);
     addData(elapse);
   }
-  void setPrev() {mPrev = std::chrono::system_clock::now();}
+  void setPrev() { mPrev = std::chrono::system_clock::now(); }
 
 private:
   std::chrono::system_clock::time_point mPrev;
@@ -148,8 +151,7 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  TildePathDebug(const TildePathConfig * pinfo_ptr)
-  : pinfo_ptr(pinfo_ptr)
+  TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;
     deadline_miss_count = 0lu;

@@ -13,11 +13,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
-  "msg/SubTopicTimeInfo.msg"
-  "msg/PubTopicTimeInfo.msg"
   "msg/MessageTrackingTag.msg"
-  "msg/Source.msg"
-  "msg/DeadlineNotification.msg"
   )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

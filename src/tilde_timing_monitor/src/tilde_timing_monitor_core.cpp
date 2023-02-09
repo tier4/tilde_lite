@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
-
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -204,12 +203,21 @@ void TildeTimingMonitor::onMttTopic(
   }
   dbg_info_->cbStatisEnter(__func__);
 
+  /* don't use SubTopicInfo
   double cur_ros = get_now();
   double pub_time = stamp_to_sec(msg->header.stamp);
   // double pub_time = stamp_to_sec(msg->output_info.header_stamp);
   pinfo.r_i_j_1_stamp = msg->input_infos[0].header_stamp;
   pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
   auto response_time = pub_time - pinfo.r_i_j_1;
+  topicCallback(pinfo, pub_time, cur_ros, response_time);
+  */
+
+  double cur_ros = get_now();
+  double pub_time = cur_ros;
+  pinfo.r_i_j_1_stamp = msg->header.stamp;
+  pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
+  auto response_time = cur_ros - pinfo.r_i_j_1;
   topicCallback(pinfo, pub_time, cur_ros, response_time);
 
   dbg_info_->cbStatisExit(__func__);

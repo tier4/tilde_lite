@@ -1,3 +1,17 @@
+// Copyright 2022 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_
 #define TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_
 
@@ -22,100 +36,7 @@
 
 namespace tilde_timing_monitor
 {
-class MinMax
-{
-public:
-  MinMax()
-  {
-    mMax = mAccum = 0.0;
-    mMin = 10000000.0;
-    mCount = 0;
-  }
-  void addData(double data)
-  {
-    if (data <= 0.0) return;
-    mMin = std::min(mMin, data);
-    mMax = std::max(mMax, data);
-    mAccum += data;
-    mCount++;
-  }
-  double getMin() { return (mCount == 0) ? 0 : mMin; }
-  double getMax() { return mMax; }
-  double getAve() { return mAccum / std::max((uint64_t)1, mCount); }
-  uint64_t getCnt() { return mCount; }
-  std::string getName() { return mName; }
-  void setName(const char * name)
-  {
-    mName = name;
-    mMin = 10000000.0;
-  }
-
-protected:
-  std::string mName;
-  double mMin, mMax, mAccum;
-  std::chrono::system_clock::time_point mPrev;
-  uint64_t mCount;
-};
-
-class RateMinMax : public MinMax
-{
-public:
-  void addRate(double & pub_time, double & limit)
-  {
-    if (mPrevPub == 0.0) {
-      mPrevPub = pub_time;
-      return;
-    }
-    auto elapse = pub_time - mPrevPub;
-    addData(elapse);
-    mPrevPub = pub_time;
-    if (elapse >= limit) {
-      over_count++;
-      over_per_limit += elapse / limit;
-    }
-  }
-  void setName(const char * name)
-  {
-    mName = name;
-    mMin = 10000000.0;
-    over_count = 0;
-    over_per_limit = 0;
-  }
-  uint64_t getOver() { return over_count; }
-  uint64_t getPerLimit() { return over_per_limit; }
-  void setPrev(double & pub_time) { mPrevPub = pub_time; }
-
-private:
-  double mPrevPub;
-  uint64_t over_count;
-  uint64_t over_per_limit;
-};
-
-class ElapseMinMax : public MinMax
-{
-public:
-  void addElapse()
-  {
-    auto cur = std::chrono::system_clock::now();
-    auto elapse_duration =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(cur - mPrev).count();
-    auto elapse = static_cast<double>(elapse_duration);
-    elapse /= (1000 * 1000 * 1000);
-    addData(elapse);
-  }
-  void setName(const char * name)
-  {
-    mName = name;
-    mMin = 10000000.0;
-  }
-  void setPrev() { mPrev = std::chrono::system_clock::now(); }
-
-private:
-  std::chrono::system_clock::time_point mPrev;
-};
-
 using MessageTrackingTag = tilde_msg::msg::MessageTrackingTag;
-using CbstatisMap = std::map<std::string, ElapseMinMax>;
 
 struct DeadlineTimer
 {
@@ -127,16 +48,18 @@ struct DeadlineTimer
   bool valid;
 };
 
-using DeadlineTimerMap = std::map<uint64_t, DeadlineTimer>;
+using DeadlineTimerMap = std::unordered_map<uint64_t, DeadlineTimer>;
 
 enum class e_stat {
   ST_NONE,
   ST_INIT,
   ST_DETECT,
 };
+
 class TildePathConfig
 {
 public:
+  uint32_t index;
   std::string path_name;
   uint64_t path_i;
   std::string topic;
@@ -151,25 +74,13 @@ public:
     status = e_stat::ST_NONE;
     cur_j = 0l;
     completed_j = -1l;
-    completed_count = 0lu;
-    deadline_miss_count = 0lu;
-    presumed_deadline_miss_count = 0lu;
     tm_mutex = mtx;
-    response_time.setName("response_time");
-    too_long_response_time.setName("too_long_response_time");
-    hz.setName("hz");
-    sub_interval.setName("sub_interval");
-    com_delay.setName("com_delay");
     deadline_timer_manage = 0lu;
-    recv_count = 0lu;
-    OK = 0lu;
-    NG = 0lu;
   }
   // variables
   e_stat status;
   int64_t cur_j;
   int64_t completed_j;
-  double prev_tick_time;
   double periodic_timer_val;
   rclcpp::TimerBase::SharedPtr periodic_timer;
   rclcpp::TimerBase::SharedPtr interval_timer;
@@ -178,42 +89,34 @@ public:
   double r_i_j_1;
   double r_i_j;
   uint64_t deadline_timer_manage;
-  uint64_t recv_count;
-  uint64_t OK;
-  uint64_t NG;
-  //
-  MinMax response_time;
-  MinMax too_long_response_time;
-  uint64_t completed_count;
-  uint64_t deadline_miss_count;
-  uint64_t presumed_deadline_miss_count;
-  RateMinMax hz;
-  RateMinMax sub_interval;
-  MinMax com_delay;
 };
 
 using RequiredPaths = std::vector<TildePathConfig>;
 
 struct KeyName
 {
-  static constexpr const char * autonomous_driving = "autonomous_driving";
-  static constexpr const char * test = "test";
-  static constexpr const char * test_sensing = "test_sensing";
+  static constexpr char autonomous_driving[] = "autonomous_driving";
+  static constexpr char test[] = "test";
+  static constexpr char test_sensing[] = "test_sensing";
 };
 
 class TildeTimingMonitor : public rclcpp::Node
 {
 public:
   TildeTimingMonitor();
+  bool get_debug_param() { return params_.debug_ctrl; }
+  bool get_ros_time_param() { return params_.pseudo_ros_time; }
+  std::string get_mode_param() { return params_.mode; }
+
+  double get_now();
 
 private:
   struct Parameters
   {
-    bool statistics;
+    bool debug_ctrl;
     bool pseudo_ros_time;
     std::string mode;
   };
-
   Parameters params_{};
 
   std::shared_ptr<rclcpp::Clock> clock_;
@@ -221,49 +124,31 @@ private:
 
   std::unordered_map<std::string, RequiredPaths> required_paths_map_;
 
-  std::mutex tm_mutex_;
-
   void loadRequiredPaths(const std::string & key);
-
-  // Timer
-  void onIntervalTimer(TildePathConfig & pinfo);
-  void startIntervalTimer(TildePathConfig & pinfo, double time_val);
-  void startPeriodicTimer(TildePathConfig & pinfo, double time_val);
-  void onPeriodicTimer(TildePathConfig & pinfo);
-  void onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer dm);
-  void startDeadlineTimer(TildePathConfig & pinfo, double start_time, double time_val);
-  double get_now();
 
   // Subscriber
   void onMttTopic(const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo);
   void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo);
-  void topicCallback(TildePathConfig & pinfo, double & cur_ros, double & pub_time);
-
+  void topicCallback(
+    TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
+  bool isOverDeadline(
+    TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
+  void checkExistingTimers(TildePathConfig & pinfo);
+  void restartTimers(TildePathConfig & pinfo, double & cur_ros);
+  // Timer
+  void onIntervalTimer(TildePathConfig & pinfo);
+  void onPeriodicTimer(TildePathConfig & pinfo);
+  void onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer & dm);
+  void startIntervalTimer(TildePathConfig & pinfo, double & time_val);
+  void startPeriodicTimer(TildePathConfig & pinfo, double & time_val);
+  void startDeadlineTimer(TildePathConfig & pinfo, double & start_time, double & time_val);
+  bool isValidDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer & dm);
   // Publisher
   rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr
     pub_tilde_deadline_miss_;
-  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos>::SharedPtr
-    pub_tm_statistics_;
-  void pubDeadlineMiss(
-    TildePathConfig & pinfo, uint64_t self_j, double start, bool presumed = false);
+  void pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self_j, double & start);
 
-  // for statistics and debug
-  void onCommand(
-    const tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg);
-  void pubCmdReqInfo();
-  void respTimeStatis(TildePathConfig & pinfo, double & response_time);
-  void tooLongRespTimeStatis(TildePathConfig & pinfo, double & response_time);
-  bool topicStatis(TildePathConfig & pinfo, double & s_stamp, double & cur_ros);
-  void cbStatisEnter(const char * func);
-  void cbStatisExit(const char * func);
-  void cmdShowStatis();
-
-  // others (debug)
-  void log(std::string fs);
-  void printLog();
-  void enLog(bool ope);
-  void dispLogCtrl(bool ope);
-  void ajustPseudoRosTime();
+  void adjustPseudoRosTime();
   void pseudoRosTimeInit();
 };
 

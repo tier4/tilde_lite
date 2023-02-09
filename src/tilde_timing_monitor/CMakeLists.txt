@@ -19,6 +19,7 @@ ament_auto_find_build_dependencies()
 # Target
 set(TILDE_TIMING_MONITOR_SRC
   src/tilde_timing_monitor_core.cpp
+  src/tilde_timing_monitor_debug.cpp
 )
 
 ament_auto_add_executable(${PROJECT_NAME}

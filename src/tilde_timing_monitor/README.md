@@ -127,7 +127,7 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 | param      | value          | content               | default |
 | ---------- | -------------- | --------------------- | ------- |
 | mode       | by config file | Measurement path type | test    |
-| debug_ctrl | bool           | debug control         | true    |
+| debug | bool           | debug control         | true    |
 
 ## output
 

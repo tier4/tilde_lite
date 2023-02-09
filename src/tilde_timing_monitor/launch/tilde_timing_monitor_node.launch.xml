@@ -1,6 +1,6 @@
 <launch>
   <arg name="config_file" default="$(find-pkg-share tilde_timing_monitor)/config/tilde_path_info.yaml"/>
-  <arg name="debug" default="true"/>
+  <arg name="debug" default="false"/>
   <arg name="mode" default="test"/>
   <arg name="use_sim_time" default="true"/>
   <arg name="pseudo_ros_time" default="false"/>

@@ -124,9 +124,9 @@ cp ~/colcon_ws/tilde_lite/src/tilde_timing_monitor/config/tilde_path_info.yaml .
 ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml mode:=test
 ```
 
-| param      | value          | content               | default |
-| ---------- | -------------- | --------------------- | ------- |
-| mode       | by config file | Measurement path type | test    |
+| param | value          | content               | default |
+| ----- | -------------- | --------------------- | ------- |
+| mode  | by config file | Measurement path type | test    |
 | debug | bool           | debug control         | true    |
 
 ## output

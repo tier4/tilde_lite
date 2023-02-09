@@ -1,6 +1,6 @@
 # tilde timing monitor (cpp)
 
-## Detect timing violation specfication
+## Detect timing violation specification
 
 Refer to [the design page](./design_timing_violation_detection.md) for further details
 
@@ -35,10 +35,31 @@ git clone https://github.com/tier4/tilde_lite.git
 cd tilde_lite
 colcon build --symlink-install
 ```
-
-## operation
-
 - source ROS2/autoware environments
+
+- cyclone dds parameters
+Extend receive buffer size.
+
+cyclonedds_config.xml
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config
+https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+    <Domain id="any">
+        <Internal>
+            <SocketReceiveBufferSize min="10MB"/>
+        </Internal>
+    </Domain>
+</CycloneDDS>
+```
+
+```bash
+export CYCLONEDDS_URI=file:///absolute/path/to/cyclonedds_config.xml
+sudo sysctl -w net.core.rmem_max=2147483647
+```
+
+See https://autowarefoundation.github.io/autoware-documentation/main/installation/additional-settings-for-developers/#tuning-dds
+
 - prepare path list yaml file (see. config/tilde_path_info.yaml)
 
 ```yaml
@@ -104,7 +125,7 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 | param      | value          | content                       | default |
 | ---------- | -------------- | ----------------------------- | ------- |
 | mode       | by config file | Measurement path type         | test    |
-| statistics | bool           | statistics collection control | true    |
+| debug_ctrl | bool           | debug  control | true    |
 
 ## output
 
@@ -120,7 +141,6 @@ header:
   frame_id: ""
 path_name: EKF=>NDT
 topic: /localization/pose_estimator/for_tilde_interpolator_mtt
-presumed: false
 deadline_timer: 0.2
 periodic_timer: 0.1
 path_i: 0
@@ -156,6 +176,7 @@ path_info:
     topic: /localization/pose_estimator/for_tilde_interpolator_mtt
     completed_count: 211
     deadline_miss_count: 22
+    false_deadline_miss_count: 0
     presumed_deadline_miss_count: 0
     response_count: 211
     response_time_min: 0.0713193416595459
@@ -165,7 +186,8 @@ path_info:
     too_long_response_time_min: 0.0
     too_long_response_time_ave: 0.0
     too_long_response_time_max: 0.0
-    recv_count: 230
+    valid_topic_count: 230
+    discard_topic_count: 0
     hz_min: 0.07070088386535645
     hz_ave: 0.11405150994010593
     hz_max: 0.386655330657959
@@ -181,6 +203,7 @@ path_info:
     topic: /localization/pose_estimator/pose_with_covariance
     completed_count: 228
     deadline_miss_count: 22
+    false_deadline_miss_count: 0
     presumed_deadline_miss_count: 0
     response_count: 228
     response_time_min: 0.10034441947937012
@@ -190,7 +213,8 @@ path_info:
     too_long_response_time_min: 0.15234684944152832
     too_long_response_time_ave: 0.0
     too_long_response_time_max: 0.15234684944152832
-    recv_count: 228
+    valid_topic_count: 228
+    discard_topic_count: 0
     hz_min: 0.09191489219665527
     hz_ave: 0.11372711783961247
     hz_max: 0.4174771308898926
@@ -240,7 +264,7 @@ Publish tilde_timing_monitor commands as below.
 | show info | show infos and statistics on console |
 | show hist | show log                             |
 
-exsample show info
+example show info
 
 ```bash
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: show info}' --once
@@ -252,7 +276,7 @@ mode=test
 path_name=EKF=>NDT path_i=0 p_i=100(ms) d_i=200(ms)
 topic=/localization/pose_estimator/for_tilde_interpolator_mtt [tilde_msg/msg/MessageTrackingTag]
 path completed=211 presumed completed=0
-deadline miss=22 presumed miss=0
+deadline miss=22 false miss=0 presumed miss=0
 response time(211) min=0.0713193416595459 ave=0.10486668998031255 max=0.13193845748901367 (sec)
 too long response time(0) min=0 ave=0 max=0 (sec)
 cur_j=271 completed_j=269
@@ -263,7 +287,7 @@ topic(230) HZ min=0.07070088386535645 ave=0.11405150994010593 max=0.386655330657
 path_name=PCL=>NDT path_i=1 p_i=100(ms) d_i=150(ms)
 topic=/localization/pose_estimator/pose_with_covariance [geometry_msgs/msg/PoseWithCovarianceStamped]
 path completed=228 presumed completed=0
-deadline miss=22 presumed miss=0
+deadline miss=22 false miss=0 presumed miss=0
 response time(228) min=0.10034441947937012 ave=0.12089436096057557 max=0.14562726020812988 (sec)
 too long response time(1) min=0.15234684944152832 ave=0.15234684944152832 max=0.15234684944152832 (sec)
 cur_j=253 completed_j=251

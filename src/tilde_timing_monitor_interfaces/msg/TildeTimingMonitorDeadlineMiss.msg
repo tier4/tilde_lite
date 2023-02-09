@@ -2,7 +2,6 @@ std_msgs/Header header
 
 string path_name
 string topic
-bool presumed
 float64 deadline_timer
 float64 periodic_timer
 int32 path_i

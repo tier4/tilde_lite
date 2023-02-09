@@ -1,7 +1,10 @@
 string path_name
 string topic
+int32 valid_topic_count
+int32 discard_topic_count
 int32 completed_count
 int32 deadline_miss_count
+int32 false_deadline_miss_count
 int32 presumed_deadline_miss_count
 int32 response_count
 float64 response_time_min
@@ -11,10 +14,12 @@ int32 too_long_response_count
 float64 too_long_response_time_min
 float64 too_long_response_time_ave
 float64 too_long_response_time_max
-int32 recv_count
 float64 hz_min
 float64 hz_ave
 float64 hz_max
+float64 sub_min
+float64 sub_ave
+float64 sub_max
 #
 int32 path_i
 int32 cur_j

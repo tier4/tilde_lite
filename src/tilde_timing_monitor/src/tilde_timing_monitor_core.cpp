@@ -187,6 +187,8 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
 void TildeTimingMonitor::onMttTopic(
   const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo)
 {
+  (void)msg;
+  (void)pinfo;
   /*
   std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
   if (pinfo.status == e_stat::ST_NONE) {

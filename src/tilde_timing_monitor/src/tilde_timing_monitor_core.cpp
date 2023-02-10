@@ -29,7 +29,6 @@ namespace tilde_timing_monitor
 {
 // const
 static constexpr char version[] = "v0.12";
-static constexpr char mtt_topic[] = "message_tracking_tag";
 
 double init_pseudo_ros_time;
 double init_dur_pseudo_ros_time;
@@ -92,22 +91,12 @@ TildeTimingMonitor::TildeTimingMonitor()
   uint32_t index = 0;
   for (auto & pinfo : required_paths_map_.at(params_.mode)) {
     // Subscriber
-    if (
-      pinfo.topic.find(mtt_topic) != std::string::npos ||
-      pinfo.topic.find("mtt") != std::string::npos) {
-      const auto mtt_sub = create_subscription<MessageTrackingTag>(
-        pinfo.topic, qos, [this, &pinfo](MessageTrackingTag::ConstSharedPtr msg) {
-          TildeTimingMonitor::onMttTopic(msg, pinfo);
-        });
-      mtt_sub_buffer_.push_back(mtt_sub);
-    } else {
-      const auto gen_sub = create_generic_subscription(
-        pinfo.topic, pinfo.mtype, qos,
-        [this, &pinfo](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
-          TildeTimingMonitor::onGenTopic(msg, pinfo);
-        });
-      gen_sub_buffer_.push_back(gen_sub);
-    }
+    const auto gen_sub = create_generic_subscription(
+      pinfo.topic, pinfo.mtype, qos,
+      [this, &pinfo](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
+        TildeTimingMonitor::onGenTopic(msg, pinfo);
+      });
+    gen_sub_buffer_.push_back(gen_sub);
     //
     dbg_info_->registerPathDebugInfo(index, std::make_shared<TildePathDebug>(&pinfo));
     pinfo.index = index++;
@@ -198,12 +187,14 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
 void TildeTimingMonitor::onMttTopic(
   const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo)
 {
+  (void)msg;
+  (void)pinfo;
+  /*
   std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
   if (pinfo.status == e_stat::ST_NONE) {
     pinfo.status = e_stat::ST_INIT;
   }
   dbg_info_->cbStatisEnter(__func__);
-
   double cur_ros = get_now();
   double pub_time = stamp_to_sec(msg->header.stamp);
   // double pub_time = stamp_to_sec(msg->output_info.header_stamp);
@@ -211,8 +202,8 @@ void TildeTimingMonitor::onMttTopic(
   pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
   auto response_time = pub_time - pinfo.r_i_j_1;
   topicCallback(pinfo, pub_time, cur_ros, response_time);
-
   dbg_info_->cbStatisExit(__func__);
+  */
 }
 
 // general topic callback

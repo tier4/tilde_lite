@@ -16,7 +16,7 @@
 #define TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_DEBUG_HPP_
 
 #include "builtin_interfaces/msg/time.hpp"
-#include "tilde_msg/msg/message_tracking_tag.hpp"
+#include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_command.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_infos.hpp"

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
-
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -74,13 +73,13 @@ TildeTimingMonitor::TildeTimingMonitor()
                               .automatically_declare_parameters_from_overrides(true))
 {
   // Parameters
-  get_parameter_or<bool>("debug", params_.debug_ctrl, true);
+  get_parameter_or<bool>("debug", params_.debug_ctrl, false);
   get_parameter_or<bool>("pseudo_ros_time", params_.pseudo_ros_time, false);
   get_parameter_or<std::string>("mode", params_.mode, "test");
   RCLCPP_INFO(
-    get_logger(), "mode=%s debug=%d pseudo_ros_time=%d", params_.mode.c_str(), params_.debug_ctrl,
-    params_.pseudo_ros_time);
-  dbg_info_ = std::make_shared<TildeTimingMonitorDebug>(this, version, params_.debug_ctrl);
+    get_logger(), "mode=%s debug=%d pseudo_ros_time=%d", params_.mode.c_str(),
+    params_.debug_ctrl, params_.pseudo_ros_time);
+  dbg_info_ = std::make_shared<TildeTimingMonitorDebug>(version, params_.debug_ctrl);
 
   // load topics and paths
   loadRequiredPaths(params_.mode);
@@ -112,6 +111,11 @@ TildeTimingMonitor::TildeTimingMonitor()
     pseudoRosTimeInit();
   }
   RCLCPP_INFO(get_logger(), "\n\n--- start ---\n");
+}
+
+void TildeTimingMonitor::registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node)
+{
+  dbg_info_->registerNodeToDebug(node);
 }
 
 // load required paths and params from config yaml
@@ -261,12 +265,6 @@ void TildeTimingMonitor::topicCallback(
 bool TildeTimingMonitor::isOverDeadline(
   TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time)
 {
-  /**
-  auto s = fmt::format("{} cur_ros={:.6f} pub_time={:.6f} r_i_j_1(hz)={:.6f}",
-    pinfo.path_name.c_str(), cur_ros, pub_time, pinfo.r_i_j_1);
-  std::cout << s.c_str() << std::endl;
-  **/
-
   bool over_f = dbg_info_->topicStatis(pinfo, pub_time, cur_ros, response_time);
   if (cur_ros - pinfo.r_i_j_1 >= pinfo.d_i || response_time >= pinfo.d_i) {
     over_f |= true;
@@ -371,6 +369,11 @@ void TildeTimingMonitor::onPeriodicTimer(TildePathConfig & pinfo)
   if (pinfo.status == e_stat::ST_NONE) {
     return;
   }
+  if (!dbg_info_->getEnableDetect(pinfo)) {
+    stopDetect(pinfo);
+    dbg_info_->setEnableDetect(pinfo, true);
+    return;
+  }
   dbg_info_->cbStatisEnter(__func__);
 
   // periodic timer proc
@@ -425,7 +428,7 @@ void TildeTimingMonitor::onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer 
 // start interval timer
 void TildeTimingMonitor::startIntervalTimer(TildePathConfig & pinfo, double & time_val)
 {
-  if (pinfo.interval_timer) {
+  if (pinfo.interval_timer.get() != nullptr) {
     pinfo.interval_timer->cancel();
     pinfo.interval_timer.reset();
   }
@@ -445,7 +448,7 @@ void TildeTimingMonitor::startIntervalTimer(TildePathConfig & pinfo, double & ti
 // start periodic timer
 void TildeTimingMonitor::startPeriodicTimer(TildePathConfig & pinfo, double & time_val)
 {
-  if (pinfo.periodic_timer) {
+  if (pinfo.periodic_timer.get() != nullptr) {
     pinfo.periodic_timer->cancel();
     pinfo.periodic_timer.reset();
   }
@@ -548,6 +551,23 @@ void TildeTimingMonitor::pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self
   m.mode = params_.mode.c_str();
   m.header.stamp = get_clock()->now();
   pub_tilde_deadline_miss_->publish(m);
+}
+
+void TildeTimingMonitor::stopDetect(TildePathConfig & pinfo)
+{
+  if (pinfo.periodic_timer.get() != nullptr) {
+    pinfo.periodic_timer->cancel();
+    pinfo.periodic_timer.reset();
+  }
+  for (auto & kv : pinfo.deadline_timer) {
+    auto & dm = kv.second;
+    if (dm.timer.get() != nullptr) {
+      dm.timer->cancel();
+      dm.timer.reset();
+      dm.valid = false;
+    }
+  }
+  pinfo.deadline_timer.clear();
 }
 
 // utils

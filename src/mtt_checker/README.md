@@ -11,7 +11,7 @@ tilde_timing_monitor に同じ。
 ## sample
 
 - STRESS-rosbag  
-起動15秒後にstressコマンドで負荷を掛けてデッドラインミスを発生させて rosbag に記録したもの   
+  起動15秒後にstressコマンドで負荷を掛けてデッドラインミスを発生させて rosbag に記録したもの
 
 ## operation
 
@@ -42,7 +42,7 @@ options:
 MTT の stamp とその間隔のみで簡易的にデッドラインミスを検出する
 
 ```bash
-ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m simple -p 100 -d 200 -t for_tilde_interpolator_mtt 
+ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m simple -p 100 -d 200 -t for_tilde_interpolator_mtt
 ### DEBUG=False
 --- STAR### DEBUG=False
 [WARN] [1674613753.225416499] [rosbag2_storage]: No storage plugin found with id 'sqlite3'.
@@ -70,10 +70,12 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 --- OK=163 Deadline miss=224 mtt topic=247 ---------------------------------
 (END:v0.12)---------------------------------
 ```
+
 **ノーマルモード**  
 シンプルモードに加えて、periodic タイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延は考慮されない。
-```bash
-ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m normal -p 100 -d 200 -t for_tilde_interpolator_mtt 
+
+````bash
+ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m normal -p 100 -d 200 -t for_tilde_interpolator_mtt
 ### DEBUG=False
 [WARN] [1674613470.464989912] [rosbag2_storage]: No storage plugin found with id 'sqlite3'.
 [INFO] [1674613470.466455932] [rosbag2_storage]: Opened database '/home/akm/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/STRESS-rosbag_0.db3' for READ_ONLY.
@@ -104,3 +106,4 @@ proc(s): pub_time - release_time (response_time)
 --- p_i count= 246 p_i in time=258.350 ---
 --- ( 248) OK:152 NG: 90 completed_j=242 ---
 (END:v0.12)---------------------------------```
+````

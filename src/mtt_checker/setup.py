@@ -1,6 +1,5 @@
 from glob import glob
 import os
-
 from warnings import simplefilter
 
 from pkg_resources import PkgResourcesDeprecationWarning

@@ -187,6 +187,7 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
 void TildeTimingMonitor::onMttTopic(
   const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo)
 {
+  /*
   std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
   if (pinfo.status == e_stat::ST_NONE) {
     pinfo.status = e_stat::ST_INIT;
@@ -200,6 +201,7 @@ void TildeTimingMonitor::onMttTopic(
   auto response_time = pub_time - pinfo.r_i_j_1;
   topicCallback(pinfo, pub_time, cur_ros, response_time);
   dbg_info_->cbStatisExit(__func__);
+  */
 }
 
 // general topic callback

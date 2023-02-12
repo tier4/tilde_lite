@@ -88,6 +88,9 @@ void TildeTimingMonitorDebug::cmdShowStatis()
     fs = fmt::format("topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format(
+      "deadline detect={}", (dinfo_ptr->enable_detect == true)? "true": "false");
+     std::cout << fs.c_str() << std::endl;
+    fs = fmt::format(
       "topic valid={} discard={}", dinfo_ptr->valid_topic_count, dinfo_ptr->discard_topic_count);
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format(

@@ -371,7 +371,6 @@ void TildeTimingMonitor::onPeriodicTimer(TildePathConfig & pinfo)
   }
   if (!dbg_info_->getEnableDetect(pinfo)) {
     stopDetect(pinfo);
-    dbg_info_->setEnableDetect(pinfo, true);
     return;
   }
   dbg_info_->cbStatisEnter(__func__);

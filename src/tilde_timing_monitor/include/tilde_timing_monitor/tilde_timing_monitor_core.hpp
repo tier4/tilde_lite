@@ -104,10 +104,10 @@ class TildeTimingMonitor : public rclcpp::Node
 {
 public:
   TildeTimingMonitor();
-  bool get_debug_param() {return params_.debug_ctrl;}
-  bool get_ros_time_param() {return params_.pseudo_ros_time;}
-  std::string get_mode_param() {return params_.mode;}
-  
+  bool get_debug_param() { return params_.debug_ctrl; }
+  bool get_ros_time_param() { return params_.pseudo_ros_time; }
+  std::string get_mode_param() { return params_.mode; }
+
   void registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node);
   double get_now();
 

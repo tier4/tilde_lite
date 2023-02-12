@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
+
+#include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
 
 #define FMT_HEADER_ONLY
 #include <fmt/format.h>
@@ -87,9 +88,8 @@ void TildeTimingMonitorDebug::cmdShowStatis()
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
     std::cout << fs.c_str() << std::endl;
-    fs = fmt::format(
-      "deadline detect={}", (dinfo_ptr->enable_detect == true)? "true": "false");
-     std::cout << fs.c_str() << std::endl;
+    fs = fmt::format("deadline detect={}", (dinfo_ptr->enable_detect == true) ? "true" : "false");
+    std::cout << fs.c_str() << std::endl;
     fs = fmt::format(
       "topic valid={} discard={}", dinfo_ptr->valid_topic_count, dinfo_ptr->discard_topic_count);
     std::cout << fs.c_str() << std::endl;
@@ -142,8 +142,7 @@ void TildeTimingMonitorDebug::cmdShowStatis()
     }
     std::cout << "---------------------" << std::endl;
   }
-  if (debug_ctrl)
-  {
+  if (debug_ctrl) {
     std::cout << "--- callbacks ---" << std::endl;
     for (auto & cb : cb_statis_map_) {
       fs = fmt::format(
@@ -225,8 +224,7 @@ void TildeTimingMonitorDebug::onCommand(
 // publish statistics
 void TildeTimingMonitorDebug::pubCmdReqInfo()
 {
-  if (!debug_ctrl)
-  {
+  if (!debug_ctrl) {
     return;
   }
   // RCLCPP_INFO(this->node->get_logger(), "--[%s]:%04d called", __func__, __LINE__);
@@ -405,8 +403,7 @@ void TildeTimingMonitorDebug::log(std::string fs)
 
 void TildeTimingMonitorDebug::printLog()
 {
-  if (!enable_log)
-  {
+  if (!enable_log) {
     return;
   }
   for (auto & fs : log_buffer_) {
@@ -419,8 +416,8 @@ void TildeTimingMonitorDebug::enDbg(bool ope)
   enable_log = ope;
 }
 
-void TildeTimingMonitorDebug::enLog(bool ope) {enable_log = ope;}
-void TildeTimingMonitorDebug::dispLogCtrl(bool ope) {log_disp = ope;}
+void TildeTimingMonitorDebug::enLog(bool ope) { enable_log = ope; }
+void TildeTimingMonitorDebug::dispLogCtrl(bool ope) { log_disp = ope; }
 
 void TildeTimingMonitorDebug::clearInfo()
 {

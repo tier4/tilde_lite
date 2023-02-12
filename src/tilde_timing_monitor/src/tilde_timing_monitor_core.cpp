@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
+
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -77,8 +78,8 @@ TildeTimingMonitor::TildeTimingMonitor()
   get_parameter_or<bool>("pseudo_ros_time", params_.pseudo_ros_time, false);
   get_parameter_or<std::string>("mode", params_.mode, "test");
   RCLCPP_INFO(
-    get_logger(), "mode=%s debug=%d pseudo_ros_time=%d", params_.mode.c_str(),
-    params_.debug_ctrl, params_.pseudo_ros_time);
+    get_logger(), "mode=%s debug=%d pseudo_ros_time=%d", params_.mode.c_str(), params_.debug_ctrl,
+    params_.pseudo_ros_time);
   dbg_info_ = std::make_shared<TildeTimingMonitorDebug>(version, params_.debug_ctrl);
 
   // load topics and paths

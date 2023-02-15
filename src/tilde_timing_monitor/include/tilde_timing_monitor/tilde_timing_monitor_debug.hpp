@@ -73,7 +73,7 @@ public:
       over_per_limit += data / limit;
     }
   }
-  double getMin() { return (mCount == 0) ? 0 : mMin; }
+  double getMin() { return (mCount == 0 || mMin == DBL_MAX) ? 0 : mMin; }
   double getMax() { return mMax; }
   double getAve() { return mAccum / std::max((uint64_t)1, mCount); }
   uint64_t getCnt() { return mCount; }
@@ -164,7 +164,9 @@ public:
     hz.setName("hz");
     sub_interval.setName("sub_interval");
     com_delay.setName("com_delay");
+    enable_detect = true;
   }
+
   const TildePathConfig * pinfo_ptr;
   //
   uint64_t valid_topic_count;
@@ -178,26 +180,31 @@ public:
   RateMinMax hz;
   RateMinMax sub_interval;
   MinMax com_delay;
+  bool enable_detect;
 };
 
-using PathDebugInfoMap = std::unordered_map<uint32_t, const std::shared_ptr<TildePathDebug>>;
+using PathDebugInfoMap = std::map<uint32_t, const std::shared_ptr<TildePathDebug>>;
 
+class TildeTimingMonitor;
 class TildeTimingMonitorDebug
 {
 public:
   TildeTimingMonitorDebug() {}
-  TildeTimingMonitorDebug(TildeTimingMonitor * node, const char * version, bool debug_ctrl);
+  TildeTimingMonitorDebug(const char * version, bool debug_ctrl);
 
   // node
-  TildeTimingMonitor * node;
+  std::shared_ptr<TildeTimingMonitor> node;
   const char * version;
   bool debug_ctrl;
+  bool enable_log;
+  bool log_disp;
 
   std::mutex tm_mutex_;
   // Publisher
   rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos>::SharedPtr
     pub_tm_statistics_;
 
+  void registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node);
   void registerPathDebugInfo(uint32_t key, std::shared_ptr<TildePathDebug> dinfo_ptr);
   bool topicStatis(
     TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
@@ -213,6 +220,8 @@ public:
   void log(std::string fs);
   void cbStatisEnter(const char * func);
   void cbStatisExit(const char * func);
+  bool getEnableDetect(TildePathConfig & pinfo);
+  void setEnableDetect(TildePathConfig & pinfo, bool ope);
 
 private:
   // subscriber
@@ -228,7 +237,10 @@ private:
   // others (debug)
   void printLog();
   void enLog(bool ope);
+  void enDbg(bool ope);
   void dispLogCtrl(bool ope);
+  void clearInfo();
+  void detectCtrl(bool ope);
 };
 
 }  // namespace tilde_timing_monitor

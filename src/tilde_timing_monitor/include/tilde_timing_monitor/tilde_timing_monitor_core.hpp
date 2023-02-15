@@ -108,6 +108,7 @@ public:
   bool get_ros_time_param() { return params_.pseudo_ros_time; }
   std::string get_mode_param() { return params_.mode; }
 
+  void registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node);
   double get_now();
 
 private:
@@ -122,7 +123,7 @@ private:
   std::shared_ptr<rclcpp::Clock> clock_;
   std::shared_ptr<rclcpp::Clock> steady_clock_;
 
-  std::unordered_map<std::string, RequiredPaths> required_paths_map_;
+  std::map<std::string, RequiredPaths> required_paths_map_;
 
   void loadRequiredPaths(const std::string & key);
 
@@ -147,6 +148,8 @@ private:
   rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr
     pub_tilde_deadline_miss_;
   void pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self_j, double & start);
+
+  void stopDetect(TildePathConfig & pinfo);
 
   void adjustPseudoRosTime();
   void pseudoRosTimeInit();

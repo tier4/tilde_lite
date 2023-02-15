@@ -127,11 +127,11 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 | param | value          | content               | default |
 | ----- | -------------- | --------------------- | ------- |
 | mode  | by config file | Measurement path type | test    |
-| debug | bool           | debug control         | true    |
+| debug | bool           | debug control         | false   |
 
 ## output
 
-- deadline miss detected topic
+- **deadline miss detected topic**
 
 /tilde_timing_monitor/output/tilde_timing_monitor/deadline_miss
 
@@ -160,7 +160,7 @@ deadline_timer_start: 1585897263.4047747
 mode: test
 ```
 
-- information and statistics topic
+- **information and statistics topic**
 
 ```bash
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: req info}' --once
@@ -265,8 +265,12 @@ Publish tilde_timing_monitor commands as below.
 | req info  | publish infos and statistics topic   |
 | show info | show infos and statistics on console |
 | show hist | show log                             |
+| dbgon     | debug mode enable                    |
+| dbgoff    | debug mode disable                   |
+| clrinfo   | clear statistics & information       |
+| detoff    | detect deadline disable -> enable    |
 
-example show info
+- **example show info**
 
 ```bash
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: show info}' --once

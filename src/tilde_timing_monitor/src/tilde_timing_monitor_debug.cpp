@@ -26,6 +26,11 @@ static constexpr char tm_command_topic[] = "tilde_timing_monitor_command";
 static constexpr char SHOW_INFO[] = "show info";
 static constexpr char REQ_INFO[] = "req info";
 static constexpr char PRINT_LOG[] = "show hist";
+static constexpr char CLR_INFO[] = "clrinfo";
+static constexpr char ENA_DETECT[] = "deton";
+static constexpr char DIS_DETECT[] = "detoff";
+static constexpr char ENA_DBG[] = "dbgon";
+static constexpr char DIS_DBG[] = "dbgoff";
 static constexpr char ENA_LOG[] = "histon";
 static constexpr char DIS_LOG[] = "histoff";
 static constexpr char DISP_ON[] = "dispon";
@@ -42,10 +47,15 @@ void TildeTimingMonitorDebug::registerPathDebugInfo(
 }
 
 // TildeTimingMonitorDebug constructor
-TildeTimingMonitorDebug::TildeTimingMonitorDebug(
-  TildeTimingMonitor * node, const char * version, bool debug_ctrl)
-: node(node), version(version), debug_ctrl(debug_ctrl)
+TildeTimingMonitorDebug::TildeTimingMonitorDebug(const char * version, bool debug_ctrl)
+: version(version), debug_ctrl(debug_ctrl), enable_log(debug_ctrl)
 {
+  log_disp = false;
+}
+
+void TildeTimingMonitorDebug::registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node)
+{
+  this->node = node;
   rclcpp::QoS qos = rclcpp::QoS{1};
   // Publisher
   pub_tm_statistics_ =
@@ -58,7 +68,8 @@ TildeTimingMonitorDebug::TildeTimingMonitorDebug(
       [this](tilde_timing_monitor_interfaces::msg::TildeTimingMonitorCommand::ConstSharedPtr msg) {
         TildeTimingMonitorDebug::onCommand(msg);
       });
-  RCLCPP_INFO(node->get_logger(), "\n\n--- DEBUG ---\n");
+  std::string fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+  RCLCPP_INFO(node->get_logger(), "\n\n--- %s ---\n", fs.c_str());
 }
 
 // show stats
@@ -76,6 +87,8 @@ void TildeTimingMonitorDebug::cmdShowStatis()
       pinfo_ptr->path_i, pinfo_ptr->p_i * 1000, pinfo_ptr->d_i * 1000);
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
+    std::cout << fs.c_str() << std::endl;
+    fs = fmt::format("deadline detect={}", (dinfo_ptr->enable_detect == true) ? "true" : "false");
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format(
       "topic valid={} discard={}", dinfo_ptr->valid_topic_count, dinfo_ptr->discard_topic_count);
@@ -129,12 +142,14 @@ void TildeTimingMonitorDebug::cmdShowStatis()
     }
     std::cout << "---------------------" << std::endl;
   }
-  std::cout << "--- callbacks ---" << std::endl;
-  for (auto & cb : cb_statis_map_) {
-    fs = fmt::format(
-      "[{}] ({}) min={:.6f} ave={:.6f} max={:.6f} (sec)", cb.first.c_str(), cb.second.getCnt(),
-      cb.second.getMin(), cb.second.getAve(), cb.second.getMax());
-    std::cout << fs.c_str() << std::endl;
+  if (debug_ctrl) {
+    std::cout << "--- callbacks ---" << std::endl;
+    for (auto & cb : cb_statis_map_) {
+      fs = fmt::format(
+        "[{}] ({}) min={:.6f} ave={:.6f} max={:.6f} (sec)", cb.first.c_str(), cb.second.getCnt(),
+        cb.second.getMin(), cb.second.getAve(), cb.second.getMax());
+      std::cout << fs.c_str() << std::endl;
+    }
   }
   std::cout << "(END)-----------------\n" << std::endl;
 }
@@ -146,27 +161,57 @@ void TildeTimingMonitorDebug::onCommand(
   std::lock_guard<std::mutex> lock(tm_mutex_);
   cbStatisEnter(__func__);
 
+  std::string fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
   if (msg->command == SHOW_INFO) {
     cmdShowStatis();
   } else if (msg->command == REQ_INFO) {
     std::cout << "--- statistics & infos topic ---" << std::endl;
+    std::cout << fs.c_str() << std::endl;
     pubCmdReqInfo();
   } else if (msg->command == PRINT_LOG) {
     std::cout << "--- start of log ---" << std::endl;
     printLog();
     std::cout << "--- end of log ---\n" << std::endl;
+    std::cout << fs.c_str() << std::endl;
+  } else if (msg->command == CLR_INFO) {
+    std::cout << "--- clear statics & infos ---" << std::endl;
+    clearInfo();
+  } else if (msg->command == ENA_DETECT) {
+    std::cout << "--- restart detect ---" << std::endl;
+    detectCtrl(true);
+  } else if (msg->command == DIS_DETECT) {
+    std::cout << "--- stop detect ---" << std::endl;
+    detectCtrl(false);
   } else if (msg->command == ENA_LOG) {
     std::cout << "--- logging enable ---" << std::endl;
     enLog(true);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
   } else if (msg->command == DIS_LOG) {
     std::cout << "--- logging disable ---" << std::endl;
     enLog(false);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
+  } else if (msg->command == ENA_DBG) {
+    std::cout << "--- debug enable ---" << std::endl;
+    enDbg(true);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
+  } else if (msg->command == DIS_DBG) {
+    std::cout << "--- debug disable ---" << std::endl;
+    enDbg(false);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
   } else if (msg->command == DISP_ON) {
     std::cout << "--- logging display ---" << std::endl;
     dispLogCtrl(true);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
   } else if (msg->command == DISP_OFF) {
     std::cout << "--- logging display off ---" << std::endl;
     dispLogCtrl(false);
+    fs = fmt::format("debug={} log={} disp={}", debug_ctrl, enable_log, log_disp);
+    std::cout << fs.c_str() << std::endl;
   } else {
     RCLCPP_WARN(
       this->node->get_logger(), "[%s]:%04d ## not supported command [%s]", __func__, __LINE__,
@@ -179,6 +224,9 @@ void TildeTimingMonitorDebug::onCommand(
 // publish statistics
 void TildeTimingMonitorDebug::pubCmdReqInfo()
 {
+  if (!debug_ctrl) {
+    return;
+  }
   // RCLCPP_INFO(this->node->get_logger(), "--[%s]:%04d called", __func__, __LINE__);
   auto m = tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos();
   m.mode = this->node->get_mode_param().c_str();
@@ -337,16 +385,14 @@ void TildeTimingMonitorDebug::cbStatisExit(const char * func)
 }
 
 // logging
-static bool log_disp = false;
-static bool enable_log = true;
 std::deque<std::string> log_buffer_;
 void TildeTimingMonitorDebug::log(std::string fs)
 {
-  if (log_disp) {
-    RCLCPP_INFO(this->node->get_logger(), fs.c_str());
-  }
   if (!enable_log) {
     return;
+  }
+  if (log_disp) {
+    RCLCPP_INFO(this->node->get_logger(), fs.c_str());
   }
   double cur_ros = this->node->get_now();
   log_buffer_.push_back(fmt::format("[{:.6f}] {}", cur_ros, fs.c_str()));
@@ -357,11 +403,60 @@ void TildeTimingMonitorDebug::log(std::string fs)
 
 void TildeTimingMonitorDebug::printLog()
 {
+  if (!enable_log) {
+    return;
+  }
   for (auto & fs : log_buffer_) {
     std::cout << fs.c_str() << std::endl;
   }
 }
+void TildeTimingMonitorDebug::enDbg(bool ope)
+{
+  debug_ctrl = ope;
+  enable_log = ope;
+}
+
 void TildeTimingMonitorDebug::enLog(bool ope) { enable_log = ope; }
 void TildeTimingMonitorDebug::dispLogCtrl(bool ope) { log_disp = ope; }
+
+void TildeTimingMonitorDebug::clearInfo()
+{
+  for (auto & pair : path_debug_info_) {
+    auto dinfo_ptr = pair.second;
+    dinfo_ptr->completed_count = 0lu;
+    dinfo_ptr->deadline_miss_count = 0lu;
+    dinfo_ptr->false_deadline_miss_count = 0lu;
+    dinfo_ptr->presumed_deadline_miss_count = 0lu;
+    dinfo_ptr->valid_topic_count = 0lu;
+    dinfo_ptr->discard_topic_count = 0lu;
+    dinfo_ptr->response_time.setName("response_time");
+    dinfo_ptr->too_long_response_time.setName("too_long_response_time");
+    dinfo_ptr->hz.setName("hz");
+    dinfo_ptr->sub_interval.setName("sub_interval");
+    dinfo_ptr->com_delay.setName("com_delay");
+  }
+  cb_statis_map_.clear();
+  log_buffer_.clear();
+}
+
+void TildeTimingMonitorDebug::detectCtrl(bool ope)
+{
+  for (auto & pair : path_debug_info_) {
+    auto dinfo_ptr = pair.second;
+    dinfo_ptr->enable_detect = ope;
+  }
+}
+
+bool TildeTimingMonitorDebug::getEnableDetect(TildePathConfig & pinfo)
+{
+  auto dinfo_ptr = path_debug_info_[pinfo.index];
+  return dinfo_ptr->enable_detect;
+}
+
+void TildeTimingMonitorDebug::setEnableDetect(TildePathConfig & pinfo, bool ope)
+{
+  auto dinfo_ptr = path_debug_info_[pinfo.index];
+  dinfo_ptr->enable_detect = ope;
+}
 
 }  // namespace tilde_timing_monitor

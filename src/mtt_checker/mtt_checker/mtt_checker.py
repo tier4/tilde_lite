@@ -282,6 +282,7 @@ def simple_analyze(mtt, count, p_i, d_i):
         f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{pub_time:06f}| {interval_time2:06f}| {proc_time:06f}|{m}|"
     )
 
+
 #
 def simple_analyze_header_only(mtt, count, p_i, d_i, pub_topic):
     global prev_pub_time, prev_rel_time, ok, ng
@@ -300,8 +301,7 @@ def simple_analyze_header_only(mtt, count, p_i, d_i, pub_topic):
         #       |    |1585897255.632508|1585897257.086864|0.681261|1.454356|
         print("release_time: topic stamp")
         print("interval(s): stamp(n+1)-stamp(n) topic stamp interval")
-        print(
-            "| No |  release_time   |interval|deadline decision             |", flush=True)
+        print("| No |  release_time   |interval|deadline decision             |", flush=True)
         prev_rel_time = org_topic_stamp_sec
     release_time = org_topic_stamp_sec
     interval_time1 = release_time - prev_rel_time
@@ -318,9 +318,7 @@ def simple_analyze_header_only(mtt, count, p_i, d_i, pub_topic):
         ok += 1
         m = f"OK.(Under {d_i})"
     prev_rel_time = release_time
-    print(
-        f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{m}|"
-    )
+    print(f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{m}|")
 
 
 # ros2 treat rosbag utility
@@ -357,7 +355,9 @@ def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
                         whole_mtt.append(ln)
                     else:
                         # simple_analyze(mtt, count, periodic_time, deadline_time)
-                        simple_analyze_header_only(mtt, count, periodic_time, deadline_time, mtt_topic)
+                        simple_analyze_header_only(
+                            mtt, count, periodic_time, deadline_time, mtt_topic
+                        )
         except Exception as e:
             print(f"{location()}[Exception] {e}", file=sys.stderr)  # discard error
             sys.exit(-1)
@@ -415,6 +415,7 @@ def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
         )
     print(f"(END:{VER})---------------------------------")
 
+
 #
 def main():
     parser = argparse.ArgumentParser(
@@ -426,8 +427,8 @@ def main():
         "-m",
         "--mode",
         metavar="mode",
-        #default="normal",
-        #help="simple: check stamp only, normal: default",
+        # default="normal",
+        # help="simple: check stamp only, normal: default",
         default="simple",
         help="simple: check stamp only",
     )

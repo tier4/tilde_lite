@@ -171,95 +171,95 @@ header:
   stamp:
     sec: 1585897285
     nanosec: 189880315
-  frame_id: ''
+  frame_id: ""
 mode: test
 path_info:
-- path_name: EKF to NDT pose
-  topic: /localization/pose_estimator/for_tilde_interpolator_mtt
-  valid_topic_count: 188
-  discard_topic_count: 54
-  completed_count: 187
-  deadline_miss_count: 59
-  false_deadline_miss_count: 0
-  presumed_deadline_miss_count: 0
-  response_count: 242
-  response_time_min: 0.0808413028717041
-  response_time_ave: 0.19864653752855033
-  response_time_max: 0.7424073219299316
-  too_long_response_count: 54
-  too_long_response_time_min: 0.2438514232635498
-  too_long_response_time_ave: 0.5194471544689603
-  too_long_response_time_max: 0.7424073219299316
-  hz_min: 0.08118677139282227
-  hz_ave: 0.10450747794630122
-  hz_max: 0.20474576950073242
-  sub_min: 0.010127067565917969
-  sub_ave: 0.10454824851261629
-  sub_max: 0.285172700881958
-  path_i: 0
-  cur_j: 575
-  completed_j: 573
-  r_i_j_1_stamp:
-    sec: 1585897285
-    nanosec: 88705498
-  r_i_j_1_float: 1585897285.0887055
-  r_i_j_float: 1585897285.1887054
-- path_name: PointcloudPreprocessor to NDT
-  topic: /localization/pose_estimator/pose_with_covariance
-  valid_topic_count: 184
-  discard_topic_count: 57
-  completed_count: 183
-  deadline_miss_count: 65
-  false_deadline_miss_count: 0
-  presumed_deadline_miss_count: 0
-  response_count: 241
-  response_time_min: 0.10250616073608398
-  response_time_ave: 0.2228888040756289
-  response_time_max: 0.8208935260772705
-  too_long_response_count: 57
-  too_long_response_time_min: 0.16010665893554688
-  too_long_response_time_ave: 0.5512506585372122
-  too_long_response_time_max: 0.8208935260772705
-  hz_min: 0.09191489219665527
-  hz_ave: 0.10458766619364421
-  hz_max: 0.20739984512329102
-  sub_min: 0.010118722915649414
-  sub_ave: 0.10455933610598246
-  sub_max: 0.3766031265258789
-  path_i: 1
-  cur_j: 608
-  completed_j: 606
-  r_i_j_1_stamp:
-    sec: 1585897285
-    nanosec: 79973000
-  r_i_j_1_float: 1585897285.079973
-  r_i_j_float: 1585897285.179973
+  - path_name: EKF to NDT pose
+    topic: /localization/pose_estimator/for_tilde_interpolator_mtt
+    valid_topic_count: 188
+    discard_topic_count: 54
+    completed_count: 187
+    deadline_miss_count: 59
+    false_deadline_miss_count: 0
+    presumed_deadline_miss_count: 0
+    response_count: 242
+    response_time_min: 0.0808413028717041
+    response_time_ave: 0.19864653752855033
+    response_time_max: 0.7424073219299316
+    too_long_response_count: 54
+    too_long_response_time_min: 0.2438514232635498
+    too_long_response_time_ave: 0.5194471544689603
+    too_long_response_time_max: 0.7424073219299316
+    hz_min: 0.08118677139282227
+    hz_ave: 0.10450747794630122
+    hz_max: 0.20474576950073242
+    sub_min: 0.010127067565917969
+    sub_ave: 0.10454824851261629
+    sub_max: 0.285172700881958
+    path_i: 0
+    cur_j: 575
+    completed_j: 573
+    r_i_j_1_stamp:
+      sec: 1585897285
+      nanosec: 88705498
+    r_i_j_1_float: 1585897285.0887055
+    r_i_j_float: 1585897285.1887054
+  - path_name: PointcloudPreprocessor to NDT
+    topic: /localization/pose_estimator/pose_with_covariance
+    valid_topic_count: 184
+    discard_topic_count: 57
+    completed_count: 183
+    deadline_miss_count: 65
+    false_deadline_miss_count: 0
+    presumed_deadline_miss_count: 0
+    response_count: 241
+    response_time_min: 0.10250616073608398
+    response_time_ave: 0.2228888040756289
+    response_time_max: 0.8208935260772705
+    too_long_response_count: 57
+    too_long_response_time_min: 0.16010665893554688
+    too_long_response_time_ave: 0.5512506585372122
+    too_long_response_time_max: 0.8208935260772705
+    hz_min: 0.09191489219665527
+    hz_ave: 0.10458766619364421
+    hz_max: 0.20739984512329102
+    sub_min: 0.010118722915649414
+    sub_ave: 0.10455933610598246
+    sub_max: 0.3766031265258789
+    path_i: 1
+    cur_j: 608
+    completed_j: 606
+    r_i_j_1_stamp:
+      sec: 1585897285
+      nanosec: 79973000
+    r_i_j_1_float: 1585897285.079973
+    r_i_j_float: 1585897285.179973
 cb_latency:
-- cb_name: onCommand
-  cb_count: 2
-  cb_min: 0.000100088
-  cb_max: 0.068340274
-  cb_ave: 0.034220181
-- cb_name: onDeadlineTimer
-  cb_count: 124
-  cb_min: 2.0789e-05
-  cb_max: 0.000735932
-  cb_ave: 0.00018947494354838715
-- cb_name: onPeriodicTimer
-  cb_count: 474
-  cb_min: 4.999e-06
-  cb_max: 0.00147837
-  cb_ave: 8.177309071729963e-05
-- cb_name: onIntervalTimer
-  cb_count: 363
-  cb_min: 7.644e-06
-  cb_max: 0.000509256
-  cb_ave: 5.889607438016527e-05
-- cb_name: onGenTopic
-  cb_count: 483
-  cb_min: 1.5679e-05
-  cb_max: 0.001050526
-  cb_ave: 0.00018876430227743278
+  - cb_name: onCommand
+    cb_count: 2
+    cb_min: 0.000100088
+    cb_max: 0.068340274
+    cb_ave: 0.034220181
+  - cb_name: onDeadlineTimer
+    cb_count: 124
+    cb_min: 2.0789e-05
+    cb_max: 0.000735932
+    cb_ave: 0.00018947494354838715
+  - cb_name: onPeriodicTimer
+    cb_count: 474
+    cb_min: 4.999e-06
+    cb_max: 0.00147837
+    cb_ave: 8.177309071729963e-05
+  - cb_name: onIntervalTimer
+    cb_count: 363
+    cb_min: 7.644e-06
+    cb_max: 0.000509256
+    cb_ave: 5.889607438016527e-05
+  - cb_name: onGenTopic
+    cb_count: 483
+    cb_min: 1.5679e-05
+    cb_max: 0.001050526
+    cb_ave: 0.00018876430227743278
 ```
 
 ## command

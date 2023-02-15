@@ -98,7 +98,9 @@ TildeTimingMonitor::TildeTimingMonitor()
         });
       gen_sub_buffer_.push_back(gen_sub);
     } catch (const rclcpp::exceptions::RCLError & e) {
-      RCLCPP_INFO(get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
+      RCLCPP_INFO(
+        get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(),
+        pinfo.mtype.c_str());
       exit(-1);
     }
     //
@@ -206,7 +208,8 @@ void TildeTimingMonitor::onGenTopic(
     auto serializer = rclcpp::Serialization<std_msgs::msg::Header>();
     serializer.deserialize_message(msg.get(), &header_msg);
   } catch (const rclcpp::exceptions::RCLError & e) {
-    RCLCPP_INFO(get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
+    RCLCPP_INFO(
+      get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
     exit(-1);
   }
   double cur_ros = get_now();

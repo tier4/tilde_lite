@@ -28,7 +28,7 @@
 namespace tilde_timing_monitor
 {
 // const
-static constexpr char version[] = "v0.12";
+static constexpr char version[] = "v0.20";
 
 double init_pseudo_ros_time;
 double init_dur_pseudo_ros_time;
@@ -60,7 +60,6 @@ std::vector<std::string> split(const std::string & str, const char delim)
   return elems;
 }
 
-std::vector<rclcpp::Subscription<MessageTrackingTag>::SharedPtr> mtt_sub_buffer_;
 std::vector<rclcpp::GenericSubscription::SharedPtr> gen_sub_buffer_;
 std::shared_ptr<TildeTimingMonitorDebug> dbg_info_;
 
@@ -91,12 +90,17 @@ TildeTimingMonitor::TildeTimingMonitor()
   uint32_t index = 0;
   for (auto & pinfo : required_paths_map_.at(params_.mode)) {
     // Subscriber
-    const auto gen_sub = create_generic_subscription(
-      pinfo.topic, pinfo.mtype, qos,
-      [this, &pinfo](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
-        TildeTimingMonitor::onGenTopic(msg, pinfo);
-      });
-    gen_sub_buffer_.push_back(gen_sub);
+    try {
+      const auto gen_sub = create_generic_subscription(
+        pinfo.topic, pinfo.mtype, qos,
+        [this, &pinfo](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
+          TildeTimingMonitor::onGenTopic(msg, pinfo);
+        });
+      gen_sub_buffer_.push_back(gen_sub);
+    } catch (const rclcpp::exceptions::RCLError & e) {
+      RCLCPP_INFO(get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
+      exit(-1);
+    }
     //
     dbg_info_->registerPathDebugInfo(index, std::make_shared<TildePathDebug>(&pinfo));
     pinfo.index = index++;
@@ -188,30 +192,6 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
 /**
  * topic callback
  */
-// mtt topic callback
-void TildeTimingMonitor::onMttTopic(
-  const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo)
-{
-  (void)msg;
-  (void)pinfo;
-  /*
-  std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
-  if (pinfo.status == e_stat::ST_NONE) {
-    pinfo.status = e_stat::ST_INIT;
-  }
-  dbg_info_->cbStatisEnter(__func__);
-  double cur_ros = get_now();
-  double pub_time = stamp_to_sec(msg->header.stamp);
-  // double pub_time = stamp_to_sec(msg->output_info.header_stamp);
-  pinfo.r_i_j_1_stamp = msg->input_infos[0].header_stamp;
-  pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
-  auto response_time = pub_time - pinfo.r_i_j_1;
-  topicCallback(pinfo, pub_time, cur_ros, response_time);
-  dbg_info_->cbStatisExit(__func__);
-  */
-}
-
-// general topic callback
 void TildeTimingMonitor::onGenTopic(
   const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo)
 {
@@ -226,15 +206,14 @@ void TildeTimingMonitor::onGenTopic(
     auto serializer = rclcpp::Serialization<std_msgs::msg::Header>();
     serializer.deserialize_message(msg.get(), &header_msg);
   } catch (const rclcpp::exceptions::RCLError & e) {
-    RCLCPP_INFO(get_logger(), "%s", e.what());
+    RCLCPP_INFO(get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
     exit(-1);
   }
   double cur_ros = get_now();
   double pub_time = cur_ros;
   pinfo.r_i_j_1_stamp = header_msg.stamp;
   pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
-  // Response time can be calculated for MTT, but for normal topics, it will be the time to
-  // subscribe
+  // Response time includes communication delay until subscription
   auto response_time = cur_ros - pinfo.r_i_j_1;
   topicCallback(pinfo, pub_time, cur_ros, response_time);
 

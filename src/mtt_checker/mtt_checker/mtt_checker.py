@@ -23,7 +23,7 @@ from .tm_common import debug_ctrl
 from .tm_common import location
 from .tm_common import stamp_to_sec
 
-VER = "v0.12"
+VER = "v0.20"
 
 
 @dataclass(frozen=False)
@@ -282,6 +282,46 @@ def simple_analyze(mtt, count, p_i, d_i):
         f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{pub_time:06f}| {interval_time2:06f}| {proc_time:06f}|{m}|"
     )
 
+#
+def simple_analyze_header_only(mtt, count, p_i, d_i, pub_topic):
+    global prev_pub_time, prev_rel_time, ok, ng
+    try:
+        if not mtt:
+            return
+        org_topic_stamp = builtin_interfaces.msg.Time(sec=0, nanosec=0)
+        org_topic_stamp = mtt["header"]["stamp"]
+        org_topic_stamp_sec = stamp_to_sec(org_topic_stamp)
+    except Exception as e:
+        print(f"{location()}[Exception] {e}", file=sys.stderr)  # discard error
+        sys.exit(-1)
+
+    if prev_rel_time == 0.0:
+        print(f"header: {pub_topic}")
+        #       |    |1585897255.632508|1585897257.086864|0.681261|1.454356|
+        print("release_time: topic stamp")
+        print("interval(s): stamp(n+1)-stamp(n) topic stamp interval")
+        print(
+            "| No |  release_time   |interval|deadline decision             |", flush=True)
+        prev_rel_time = org_topic_stamp_sec
+    release_time = org_topic_stamp_sec
+    interval_time1 = release_time - prev_rel_time
+    ng_count = 0
+    # print(f"## {prev_rel_time=} {release_time=}")
+    for t in np.arange(prev_rel_time, release_time, p_i):
+        if t + d_i < release_time:
+            # print(f"## {t}+{d_i} : {release_time}")
+            ng_count += 1
+    if ng_count > 0:
+        m = f"Deadline miss.(Over {d_i} ({ng_count:3}))"
+        ng += ng_count
+    else:
+        ok += 1
+        m = f"OK.(Under {d_i})"
+    prev_rel_time = release_time
+    print(
+        f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{m}|"
+    )
+
 
 # ros2 treat rosbag utility
 def get_rosbag_options(path, serialization_format="cdr"):
@@ -307,16 +347,17 @@ def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
                     DP(f"count={count}=====================================================")
                     if not mtt:
                         break
-                    ln = MttInfo1line()
-                    ln.line = count
-                    ln.pub_topic = mtt["output_info"]["topic_name"]
-                    ln.pub_stamp = mtt["output_info"]["header_stamp"]
-                    ln.org_topic = mtt["input_infos"][0]["topic_name"]
-                    ln.org_stamp = mtt["input_infos"][0]["header_stamp"]
                     if mode == "normal":
+                        ln = MttInfo1line()
+                        ln.line = count
+                        ln.pub_topic = mtt["output_info"]["topic_name"]
+                        ln.pub_stamp = mtt["output_info"]["header_stamp"]
+                        ln.org_topic = mtt["input_infos"][0]["topic_name"]
+                        ln.org_stamp = mtt["input_infos"][0]["header_stamp"]
                         whole_mtt.append(ln)
                     else:
-                        simple_analyze(mtt, count, periodic_time, deadline_time)
+                        # simple_analyze(mtt, count, periodic_time, deadline_time)
+                        simple_analyze_header_only(mtt, count, periodic_time, deadline_time, mtt_topic)
         except Exception as e:
             print(f"{location()}[Exception] {e}", file=sys.stderr)  # discard error
             sys.exit(-1)
@@ -354,16 +395,17 @@ def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
             DP(f"count={count}=====================================================")
             if not mtt:
                 break
-            ln = MttInfo1line()
-            ln.line = count
-            ln.pub_topic = mtt["output_info"]["topic_name"]
-            ln.pub_stamp = mtt["output_info"]["header_stamp"]
-            ln.org_topic = mtt["input_infos"][0]["topic_name"]
-            ln.org_stamp = mtt["input_infos"][0]["header_stamp"]
             if mode == "normal":
+                ln = MttInfo1line()
+                ln.line = count
+                ln.pub_topic = mtt["output_info"]["topic_name"]
+                ln.pub_stamp = mtt["output_info"]["header_stamp"]
+                ln.org_topic = mtt["input_infos"][0]["topic_name"]
+                ln.org_stamp = mtt["input_infos"][0]["header_stamp"]
                 whole_mtt.append(ln)
             else:
-                simple_analyze(mtt, count, periodic_time, deadline_time)
+                # simple_analyze(mtt, count, periodic_time, deadline_time)
+                simple_analyze_header_only(mtt, count, periodic_time, deadline_time, mtt_topic)
 
     if mode == "normal":
         analyze(periodic_time, deadline_time)
@@ -372,7 +414,6 @@ def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
             f"--- OK={ok} Deadline miss={ng} mtt topic={count - 1} ---------------------------------"
         )
     print(f"(END:{VER})---------------------------------")
-
 
 #
 def main():
@@ -385,8 +426,10 @@ def main():
         "-m",
         "--mode",
         metavar="mode",
-        default="normal",
-        help="simple: check stamp only, normal: default",
+        #default="normal",
+        #help="simple: check stamp only, normal: default",
+        default="simple",
+        help="simple: check stamp only",
     )
     parser.add_argument(
         "-p",
@@ -419,6 +462,10 @@ def main():
 
     if args.mode != "normal" and args.mode != "simple":
         print(f"## args mode error {args.mode}")
+        sys.exit(-1)
+
+    if args.mode == "normal":
+        print(f"## Not supported normal mode {args.mode}")
         sys.exit(-1)
 
     if args.mode == "normal" and (args.periodic is None or args.periodic <= 0.0):

@@ -1,14 +1,12 @@
 #!/usr/bin/env /usr/bin/python3
 # -*- coding: utf-8 -*-
 import _thread
+import inspect
 import os
-from pprint import pprint
 import sys
-import time
 
 from rclpy.clock import Clock
 from rclpy.clock import ClockType
-from rclpy.time import Time
 
 DEBUG_LEVEL_DEBUG = 1
 DEBUG_LEVEL_INFO = 2
@@ -19,6 +17,8 @@ TILDE_TM_DEBUG = "TILDE_TM_DEBUG"
 
 DEBUG = False
 g_msg_dump_enable = False
+g_tid_prev_time = {}
+g_loc_prev_time = 0.0
 
 COMMAND_SHOW_INFO = "show info"
 COMMAND_REQ_INFO = "req info"
@@ -34,23 +34,8 @@ COMMAND_MSG_DUMP_OFF = "msgoff"
 COMMAND_DEBUG_ON = "debug on"
 COMMAND_DEBUG_OFF = "debug off"
 
-g_tid_prev_time = {}
-
-### for debug
-import inspect
-
-g_loc_prev_time = 0.0
-
 
 def LOC(depth=0):
-    """Get execute loaction (file name & line number)
-
-    Args:
-        depth (int, optional): _description_. Defaults to 0.
-
-    Returns:
-        _type_: function name & line number
-    """
     if DEBUG:
         frame = inspect.currentframe().f_back
         loc = f"[{frame.f_code.co_name:18}:{frame.f_lineno:04}]"
@@ -60,37 +45,23 @@ def LOC(depth=0):
 
 
 def location(depth=0):
-    """Get execute loaction (file name & line number)
-
-    Args:
-        depth (int, optional): _description_. Defaults to 0.
-
-    Returns:
-        _type_: file name function name & line number
-    """
     frame = inspect.currentframe().f_back
     return os.path.basename(frame.f_code.co_filename), frame.f_code.co_name, frame.f_lineno, "---"
 
 
 def init_debug():
-    """DEBUG enabling by environment variable 'export PRM_DEBUG=True'"""
     global DEBUG
 
     v = os.getenv(TILDE_TM_DEBUG, default=False)
     if type(v) is str and v.upper() == "TRUE":
         DEBUG = True
-    elif type(v) is bool and v == True:
+    elif type(v) is bool and v is True:
         DEBUG = True
     else:
         DEBUG = False
 
 
 def DP(dstr=None, level=DEBUG_LEVEL_DEBUG):
-    """Debug print control
-
-    Args:
-        args: same print() arguments
-    """
     if DEBUG:
         if level >= g_debug_level:
             tid = _thread.get_ident()
@@ -108,11 +79,6 @@ def DP(dstr=None, level=DEBUG_LEVEL_DEBUG):
 
 
 def PP(dstr):
-    """Info print control
-
-    Args:
-        args: same print() arguments
-    """
     tid = _thread.get_ident()
     if tid not in g_tid_prev_time.keys():
         g_tid_prev_time.update({tid: 0.0})
@@ -132,11 +98,11 @@ def clk_nano_to_sec(t):
     return float(t.nanoseconds) / (1000.0 * 1000.0 * 1000.0)
 
 
-###
+#
 def msg_dump(path_name, topic_name, msg, sub_time):
     global g_msg_dump_enable
     # print(f"### {g_msg_dump_enable=}", flush=True)
-    if g_msg_dump_enable == True:
+    if g_msg_dump_enable:
         print(
             f"\n=== {sub_time:6f} [{topic_name}] in {path_name}: {msg.output_info.header_stamp} ==="
         )
@@ -157,7 +123,7 @@ def debug_ctrl(ope):
     print(f"### {DEBUG=}", flush=True)
 
 
-###
+#
 g_hist_on = True
 g_hist_disp = False
 hist_buf = []
@@ -166,20 +132,20 @@ hist_limit = 1000 * 100
 
 def hist_log(m):
     global g_prev_hist
-    if g_hist_on != True:
+    if not g_hist_on:
         return
     if len(hist_buf) >= hist_limit:
         del hist_buf[0:1000]
     hist_buf.append(m)
-    if g_hist_disp == True:
+    if g_hist_disp:
         print(f"{m}", flush=True)
 
 
 def show_hist(command, node):
-    print(f"\n--- start history ---\n")
+    print("\n--- start history ---\n")
     for w in hist_buf:
         print(w)
-    print(f"\n---(END)---\n", flush=True)
+    print("\n---(END)---\n", flush=True)
 
 
 def clr_hist(command):

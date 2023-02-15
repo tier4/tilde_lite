@@ -2,40 +2,28 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import copy
-from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
-import itertools
-from multiprocessing.context import get_spawning_popen
-from operator import *
-import os
-from pprint import pprint
-from stat import FILE_ATTRIBUTE_INTEGRITY_STREAM
 import sys
-from typing import ClassVar
-from typing import Dict
 from typing import List
-from typing import Literal
-from typing import Tuple
 
 import builtin_interfaces.msg
-from geometry_msgs.msg import *
 import numpy as np
-import rclpy
-from rclpy.node import Node
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py import message_to_ordereddict
-from rosidl_runtime_py import message_to_yaml
 from rosidl_runtime_py.utilities import get_message
-from sensor_msgs.msg import *
-from std_msgs.msg import *
 import yaml
 
-from tilde_msg.msg import *
+from tilde_msg.msg import MessageTrackingTag
 
-from .tm_common import *
+from .tm_common import DP
+from .tm_common import LOC
+from .tm_common import debug_ctrl
+from .tm_common import location
+from .tm_common import stamp_to_sec
+
+VER = "v0.12"
 
 
 @dataclass(frozen=False)
@@ -51,7 +39,7 @@ whole_mtt = []
 
 
 @dataclass(frozen=False)
-class MttTimingAnalizer:
+class MttTimingAnalyzer:
     ok: int = 0
     p_ok: int = 0
     ng: int = 0
@@ -80,12 +68,9 @@ class MttTimingAnalizer:
     stime: List[float] = field(default_factory=list)
 
 
-VER = "v0.1"
-
-
 def analyze(p_i, d_i):
     print_title()
-    ana = MttTimingAnalizer()
+    ana = MttTimingAnalyzer()
     skip = 0
     for idx, ln in enumerate(whole_mtt):
         if skip > 0:
@@ -109,7 +94,7 @@ def analyze(p_i, d_i):
         ana.next_rel_time = ana.rel_time + p_i
         ana.proc_time = ana.pub_time - ana.rel_time
         if ana.proc_time > d_i or ana.org_interval > d_i or ana.pub_interval > d_i:
-            print_line(ana, p_i, d_i, "fail: deadline miss occured")
+            print_line(ana, p_i, d_i, "fail: deadline miss")
             continue
         print_line(ana, p_i, d_i, "")
         ana.l2_prev_rel_time = ana.rel_time
@@ -124,7 +109,7 @@ def analyze(p_i, d_i):
             ana.l2_proc_time = ana.l2_pub_time - ana.l2_rel_time
             # print(f"--- [{ana.l2_line}]{ana.l2_org_interval=} {ana.l2_pub_interval=} {ana.l2_proc_time=} ---")
             if ana.l2_org_interval > d_i or ana.l2_pub_interval > d_i or ana.l2_proc_time > d_i:
-                print_next_line(ana, p_i, d_i, "skip: deadline miss occured")
+                print_next_line(ana, p_i, d_i, "skip: deadline miss")
                 ana.l2_prev_rel_time = ana.l2_rel_time
                 ana.l2_prev_pub_time = ana.l2_pub_time
                 ana.prev_rel_time = ana.l2_rel_time
@@ -134,27 +119,26 @@ def analyze(p_i, d_i):
             break
         else:
             print_line(ana, p_i, d_i, "one before last line")
-            continue
-        # analize
-        # 前回設定したデッドラインタイマをチェックする
+        # analyze
+        # check the prev deadline timers
         if skip == 0:
+            first = False
             for t in ana.deadline_timer:
-                # rel = ana.rel_time + p_i
                 rel = ana.rel_time
-                if t <= rel:
+                if first is False and t <= rel:
                     ana.cur_ok += 1
                     ana.ok += 1
+                    first = True
                     print_desc(ana, t, "OK")
                 else:
                     print_desc(ana, t, "-- IGNORE --")
 
             ana.deadline_timer.clear()
         #
-        # 今回のデッドラインタイマを設定する
+        # set current deadline timers
         # print_analyze(ana, p_i, d_i, "")
         for t in np.arange(ana.rel_time + p_i, ana.l2_rel_time, p_i):
-            if t + d_i < ana.l2_rel_time:
-                # if (t - p_i) + d_i < ana.l2_rel_time:
+            if t + d_i < ana.l2_rel_time + ana.l2_proc_time:
                 ana.cur_ng += 1
                 ana.ng += 1
                 print_periodic(ana, t, p_i, d_i, "periodic+deadline TIMEOUT")
@@ -173,48 +157,48 @@ def analyze(p_i, d_i):
     print(f"--- p_i={p_i * 1000:4.2f}(ms) d_i={d_i * 1000:4.2f}(ms) ---")
     print(f"--- p_i count={cnt:4} p_i in time={(to - fm) / p_i:4.3f} ---")
     print(
-        f"--- ({len(whole_mtt):4}) OK:{ana.ok:3} NG:{ana.ng:3} pseudo OK:{ana.p_ok:3} pseudo NG:{ana.p_ng:3} completed_j={ana.ok+ana.p_ok+ana.ng+ana.p_ng:3} ---"
+        f"--- ({len(whole_mtt):4}) OK:{ana.ok:3} NG:{ana.ng:3} completed_j={ana.ok+ana.p_ok+ana.ng+ana.p_ng:3} ---"
     )
 
 
 def print_line(ana, p_i, d_i, desc):
     print(
-        f"{LOC()}|{ana.line:4}|{ana.rel_time:6f}|{ana.org_interval:6f}|{ana.pub_time:6f}|{ana.pub_interval:6f}|{ana.proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|{ana.line:4}|{ana.rel_time:6f}|{ana.org_interval:6f}|{ana.pub_time:6f}|{ana.pub_interval:6f}|{ana.proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}||{desc}|"
     )
     ana.stime.append(ana.rel_time)
 
 
 def print_next_line(ana, p_i, d_i, desc):
     print(
-        f"{LOC()}|{ana.l2_line:4}|{ana.l2_rel_time:6f}|{ana.l2_org_interval:6f}|{ana.l2_pub_time:6f}|{ana.l2_pub_interval:6f}|{ana.l2_proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|{ana.l2_line:4}|{ana.l2_rel_time:6f}|{ana.l2_org_interval:6f}|{ana.l2_pub_time:6f}|{ana.l2_pub_interval:6f}|{ana.l2_proc_time:6f}|{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}|{desc}|"
     )
     ana.stime.append(ana.rel_time)
 
 
 def print_analyze(ana, p_i, d_i, desc):
     print(
-        f"{LOC()}|p_i |{ana.next_rel_time:6f}|{ana.next_rel_time - ana.rel_time:6f}|{ana.next_rel_time + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|p_i |{ana.next_rel_time:6f}|{ana.next_rel_time - ana.rel_time:6f}|{ana.next_rel_time + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}|{desc}|"
     )
     ana.stime.append(ana.next_rel_time)
 
 
 def print_periodic(ana, t, p_i, d_i, desc):
     print(
-        f"{LOC()}|-p_i|{t:6f}|{t - ana.rel_time:6f}|{t + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|-p_i|{t:6f}|{t - ana.rel_time:6f}|{t + d_i:6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}|{desc}|"
     )
     ana.stime.append(t)
 
 
 def print_deadline_to(ana, t, desc):
     print(
-        f"{LOC()}|-d_i|{t:.6f}|        |                 |        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|-d_i|{t:.6f}|        |                 |        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}|{desc}|"
     )
     ana.stime.append(t)
 
 
 def print_desc(ana, dead, desc):
     print(
-        f"{LOC()}|    |                 |        |{dead:.6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.p_ok=:3}|{ana.ng=:3}|{ana.p_ng=:3}|{desc}|"
+        f"{LOC()}|    |                 |        |{dead:.6f}|        |        |{len(ana.deadline_timer):3}|{ana.ok=:3}|{ana.ng=:3}|{desc}|"
     )
 
 
@@ -222,16 +206,13 @@ def print_title():
     print(f"MTT: {whole_mtt[0].pub_topic}")
     print(f"ORG: {whole_mtt[0].org_topic}")
     #       |    |1585897255.632508|1585897257.086864|0.681261|1.454356|
-    print(f"release_time: SRC topic stamp")
-    print(f"interval1(s): SRC(n+1)-SRC(n) topic stamp interval")
-    print(f"pub_time: MTT topic publish time")
-    print(f"interval2(s): MTT(n+1)-MTT(n)) topic stamp interval")
-    print(f"proc_time(s): pub_time - release_time(EKF+NDT process time)")
+    print("release_time: SRC topic stamp")
+    print("dur-1(s): SRC(n+1)-SRC(n) topic stamp interval")
+    print("pub_time: MTT topic publish time")
+    print("dur-2(s): MTT(n+1)-MTT(n)) topic stamp interval")
+    print("proc(s): pub_time - release_time (response_time)")
     print(
-        f"interval(s): SRC(n+1)-SRC(n) topic stamp interval\nproc_time(s): pub_time - release_time(EKF+NDT process time)"
-    )
-    print(
-        f"| No |  release_time   | dur-1  |     pub_time    |  due-2 |  proc  |   |   OK     |    P-OK    |   NG     |    P-NG    |  remarks               |",
+        "| No |  release_time   | dur-1  |     pub_time    |  dur-2 |  proc  |   |   OK     |   NG     |    remarks            |",
         flush=True,
     )
 
@@ -242,7 +223,7 @@ ok = 0
 ng = 0
 
 
-def simple_analyze(mtt, count, deadline_time):
+def simple_analyze(mtt, count, p_i, d_i):
     global prev_pub_time, prev_rel_time, ok, ng
     try:
         if not mtt:
@@ -263,16 +244,16 @@ def simple_analyze(mtt, count, deadline_time):
         print(f"MTT: {pub_topic}")
         print(f"SRC: {sub_topic}")
         #       |    |1585897255.632508|1585897257.086864|0.681261|1.454356|
-        print(f"release_time: SRC topic stamp")
-        print(f"interval1(s): SRC(n+1)-SRC(n) topic stamp interval")
-        print(f"pub_time: MTT topic publish time")
-        print(f"interval2(s): MTT(n+1)-MTT(n)) topic stamp interval")
-        print(f"proc_time(s): pub_time - release_time(EKF+NDT process time)")
+        print("release_time: SRC topic stamp")
+        print("interval1(s): SRC(n+1)-SRC(n) topic stamp interval")
+        print("pub_time: MTT topic publish time")
+        print("interval2(s): MTT(n+1)-MTT(n)) topic stamp interval")
+        print("proc_time(s): pub_time - release_time(EKF+NDT process time)")
         print(
-            f"interval(s): SRC(n+1)-SRC(n) topic stamp interval\nproc_time(s): pub_time - release_time(EKF+NDT process time)"
+            "interval(s): SRC(n+1)-SRC(n) topic stamp interval\nproc_time(s): pub_time - release_time(EKF+NDT process time)"
         )
         print(
-            f"| No |  release_time   |interval1|     pub_time    |interval2|proc_time|deadline decision             |",
+            "| No |  release_time   |interval1|     pub_time    |interval2|proc_time|deadline decision             |",
             flush=True,
         )
         prev_rel_time = org_topic_stamp_sec
@@ -281,19 +262,22 @@ def simple_analyze(mtt, count, deadline_time):
     proc_time = pub_time - release_time
     interval_time1 = release_time - prev_rel_time
     interval_time2 = pub_time - prev_pub_time
-    prev_rel_time = release_time
-    prev_pub_time = pub_time
     ng_count = 0
-    if proc_time >= deadline_time:
-        ng_count += int(proc_time / deadline_time)
-    if interval_time1 >= deadline_time:
-        ng_count += int(interval_time1 / deadline_time)
+    if proc_time >= d_i:
+        ng_count += int(proc_time / d_i)
+    # print(f"## {prev_rel_time=} {release_time=}")
+    for t in np.arange(prev_rel_time, release_time, p_i):
+        if t + d_i < release_time:
+            # print(f"## {t}+{d_i} : {release_time}")
+            ng_count += 1
     if ng_count > 0:
-        m = f"Deadline miss.(Over {deadline_time} ({ng_count:3}))"
+        m = f"Deadline miss.(Over {d_i} ({ng_count:3}))"
         ng += ng_count
     else:
         ok += 1
-        m = f"OK.(Under {deadline_time})"
+        m = f"OK.(Under {d_i})"
+    prev_rel_time = release_time
+    prev_pub_time = pub_time
     print(
         f"|{count:4}|{release_time:06f}| {interval_time1:06f}|{pub_time:06f}| {interval_time2:06f}| {proc_time:06f}|{m}|"
     )
@@ -311,12 +295,12 @@ def get_rosbag_options(path, serialization_format="cdr"):
     return storage_options, converter_options
 
 
-def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
-    if input.endswith(".yaml") == True:
+def mtt_check(mode, in_file, periodic_time, deadline_time, mtt_topic):
+    if in_file.endswith(".yaml"):
         mtt = MessageTrackingTag()
         try:
             count = 0
-            with open(input, "r") as f:
+            with open(in_file, "r") as f:
                 ydata = yaml.load_all(f, Loader=yaml.FullLoader)
                 for mtt in ydata:
                     count += 1
@@ -332,27 +316,27 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
                     if mode == "normal":
                         whole_mtt.append(ln)
                     else:
-                        simple_analyze(mtt, count, deadline_time)
+                        simple_analyze(mtt, count, periodic_time, deadline_time)
         except Exception as e:
             print(f"{location()}[Exception] {e}", file=sys.stderr)  # discard error
             sys.exit(-1)
     else:
         try:
-            storage_options, converter_options = get_rosbag_options(input)
+            storage_options, converter_options = get_rosbag_options(in_file)
             # print('storage_options=%s, converter_options=%s' % (storage_options, converter_options))
             reader = rosbag2_py.SequentialReader()
             reader.open(storage_options, converter_options)
             topic_types = reader.get_all_topics_and_types()
             type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
         except Exception as e:
-            print(f"{location()}[Exception] {e} input file not rosbag {input}", file=sys.stderr)
+            print(f"{location()}[Exception] {e} input file not rosbag {in_file}", file=sys.stderr)
             sys.exit(-1)
         count = 0
         while reader.has_next():
             try:
                 (topic, data, t) = reader.read_next()  # これら3つの要素をタプルで返す
                 # print('topic=%s t=%s' % (topic, t))
-                if not mtt_topic in topic:
+                if mtt_topic not in topic:
                     continue
                 if "mtt" in topic or "message_tracking_tag" in topic:
                     # print(f"OLD {t}")
@@ -379,7 +363,7 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
             if mode == "normal":
                 whole_mtt.append(ln)
             else:
-                simple_analyze(mtt, count, deadline_time)
+                simple_analyze(mtt, count, periodic_time, deadline_time)
 
     if mode == "normal":
         analyze(periodic_time, deadline_time)
@@ -393,7 +377,7 @@ def mtt_check(mode, input, periodic_time, deadline_time, mtt_topic):
 #
 def main():
     parser = argparse.ArgumentParser(
-        description=f"Check the deadline by Message tracking tag (mtt).",
+        description="Check the deadline by Message tracking tag (mtt).",
         usage="ros2 run mtt_checker mtt_checker [-h] [-m mode] [-p time] [-d time] [-t name] input file",
     )
     parser.add_argument("input", metavar="input", help="Input rosbag or MTT yaml file")
@@ -410,7 +394,7 @@ def main():
         metavar="time",
         type=float,
         default=100.0,
-        help="periodic time default:100.0 (ms) use normal mode only",
+        help="periodic time default:100.0 (ms)",
     )
     parser.add_argument(
         "-d",
@@ -437,10 +421,10 @@ def main():
         print(f"## args mode error {args.mode}")
         sys.exit(-1)
 
-    if args.mode == "normal" and (args.periodic == None or args.periodic <= 0.0):
+    if args.mode == "normal" and (args.periodic is None or args.periodic <= 0.0):
         print(f"## {args.mode} periodic {args.periodic} (ms) error", flush=True)
         sys.exit(-1)
-    if args.deadline == None or args.deadline <= 0.0:
+    if args.deadline is None or args.deadline <= 0.0:
         print(f"## deadline {args.deadline} (ms) error", flush=True)
         sys.exit(-1)
     elif args.mode == "normal" and (args.deadline <= args.periodic):

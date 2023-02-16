@@ -2,7 +2,7 @@
 
 ## Detect timing violation specification
 
-Refer to [the design page](./design_timing_violation_detection.md) for further details
+Refer to [the design page](../../docs/design_timing_violation_detection.md) for further details
 
 ## limitation
 

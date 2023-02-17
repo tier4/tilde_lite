@@ -125,16 +125,19 @@ If you want to add `MessageTrackingNotifier` to a path, you need to change files
 
 The timing violation monitor has a configuration file to know which path and topic to monitor. In this step, users have to write configuration file.
 
-The sample configuration file is shown as below.
-
+The sample configuration file is shown as below. If you add a new path, append the items in `target_paths`.
 
 ```yml
  ros__parameters:
     diag_period_sec: 5.0 # frequency of report
     target_paths:
-        "sensing-to-localization" :
-            {
-            }
+      ekf-to-ndt: # node name
+        topic: /localization/pose_estimator/for_tilde_interpolator_mtt # topic name
+        message_type: tilde_msg/msg/MessageTrackingTag # message type
+        severity: warn # severity
+        period: 100.0 # execution frequency of path
+        deadline: 200.0 # deadline of response time
+        violation_count_thresh: 5 # threshold to judge warn or not.
 ```
 
 <!-- prettier-ignore-start -->

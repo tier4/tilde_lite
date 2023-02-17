@@ -128,16 +128,16 @@ The timing violation monitor has a configuration file to know which path and top
 The sample configuration file is shown as below. If you add a new path, append the items in `target_paths`.
 
 ```yml
- ros__parameters:
-    diag_period_sec: 5.0 # frequency of report
-    target_paths:
-      ekf-to-ndt: # node name
-        topic: /localization/pose_estimator/for_tilde_interpolator_mtt # topic name
-        message_type: tilde_msg/msg/MessageTrackingTag # message type
-        severity: warn # severity
-        period: 100.0 # execution frequency of path
-        deadline: 200.0 # deadline of response time
-        violation_count_thresh: 5 # threshold to judge warn or not.
+ros__parameters:
+  diag_period_sec: 5.0 # frequency of report
+  target_paths:
+    ekf-to-ndt: # node name
+      topic: /localization/pose_estimator/for_tilde_interpolator_mtt # topic name
+      message_type: tilde_msg/msg/MessageTrackingTag # message type
+      severity: warn # severity
+      period: 100.0 # execution frequency of path
+      deadline: 200.0 # deadline of response time
+      violation_count_thresh: 5 # threshold to judge warn or not.
 ```
 
 <!-- prettier-ignore-start -->
@@ -150,6 +150,8 @@ The sample configuration file is shown as below. If you add a new path, append t
 The timing violation monitor transmits the topic message whose name is `/diagnostics`. `/diagnostics` is the common topic message served by ROS 2 [`diagnostic_updater`](https://github.com/ros/diagnostics). The format of `/diagnostics` is defined by `diagnostic_updater` also.
 
 <!-- prettier-ignore-start -->
+
 !!! Note
-    What this section describes is tentative.
+What this section describes is tentative.
+
 <!-- prettier-ignore-start -->

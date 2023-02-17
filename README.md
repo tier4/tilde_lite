@@ -65,61 +65,61 @@ If you want to add `MessageTrackingNotifier` to a path, you need to change files
 
 1. Add `timing_violation_monitor_utils` to your package.xml
 
-    ```xml
-      <depend>timing_violation_monitor_utils</depend>
-    ```
+   ```xml
+     <depend>timing_violation_monitor_utils</depend>
+   ```
 
 2. Change the header file of end node as below
 
-    ```cpp
-    // Statements which include header files.
-    #include <rclcpp/rclcpp.hpp>
-    #include <timing_violation_monitor_utils/message_consumption_notifier.hpp> // *** Add this statements ***/
+   ```cpp
+   // Statements which include header files.
+   #include <rclcpp/rclcpp.hpp>
+   #include <timing_violation_monitor_utils/message_consumption_notifier.hpp> // *** Add this statements ***/
 
-    class EndNode : public rclcpp::Node {
+   class EndNode : public rclcpp::Node {
 
-      public:
-        EndNode(); // constructor
+     public:
+       EndNode(); // constructor
 
-      private:
-        // callback 
-        void main_method();
-        void receive_method();
-        //...
+     private:
+       // callback
+       void main_method();
+       void receive_method();
+       //...
 
-        // subscribers and publishers
-        rclcpp::Subscription<PointCloud2>::SharedPtr sub_;
-        rclcpp::Publisher<PointCloud2>::SharedPtr pub_;
+       // subscribers and publishers
+       rclcpp::Subscription<PointCloud2>::SharedPtr sub_;
+       rclcpp::Publisher<PointCloud2>::SharedPtr pub_;
 
-        std::unique_ptr<timing_violation_monitor_utils::MessageConsumptionNotifier> notifier_; // *** Add this statements ***/
-    };
-    ```
+       std::unique_ptr<timing_violation_monitor_utils::MessageConsumptionNotifier> notifier_; // *** Add this statements ***/
+   };
+   ```
 
 3. Add notifier execution on the end node
 
-    ```cpp
-    // Constructor.
-    EndNode::EndNode() {
-        sub_ = this->create_subscription<PointCloud2>(...);
-        pub_ = this->create_publisher<PointCloud2>(...);
+   ```cpp
+   // Constructor.
+   EndNode::EndNode() {
+       sub_ = this->create_subscription<PointCloud2>(...);
+       pub_ = this->create_publisher<PointCloud2>(...);
 
-        notifier_ = std::make_unique<timing_violation_monitor_utils::MessageConsumptionNotifier>(this, "notifier_topic_message_name", 10); // *** Add this statements ***/
-    }
-    // Other statements ....
+       notifier_ = std::make_unique<timing_violation_monitor_utils::MessageConsumptionNotifier>(this, "notifier_topic_message_name", 10); // *** Add this statements ***/
+   }
+   // Other statements ....
 
-    // Definition of main_method().
-    void EndNode::main_method() {
-        // user code.
-        // ...
+   // Definition of main_method().
+   void EndNode::main_method() {
+       // user code.
+       // ...
 
-        // when target topic is consumed.
-        consume_message(message);
-        notifier->notify(message.header.stamp);  // *** Add this statements ***/
+       // when target topic is consumed.
+       consume_message(message);
+       notifier->notify(message.header.stamp);  // *** Add this statements ***/
 
-        // user code.
-        // ...
-    }
-    ```
+       // user code.
+       // ...
+   }
+   ```
 
 ### Add new path definition to the configuration file
 
@@ -147,5 +147,9 @@ The sample configuration file is shown as below. If you add a new path, append t
 
 ## Output Message
 
-The timing violation monitor transmits the topic message whose name is `/diagnostics`. `/diagnostics` is the common topic message.
+The timing violation monitor transmits the topic message whose name is `/diagnostics`. `/diagnostics` is the common topic message served by ROS 2 [`diagnostic_updater`](https://github.com/ros/diagnostics). The format of `/diagnostics` is defined by `diagnostic_updater` also.
 
+<!-- prettier-ignore-start -->
+!!! Note
+    What this section describes is tentative.
+<!-- prettier-ignore-start -->

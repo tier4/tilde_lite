@@ -74,7 +74,7 @@ In this case, the timing violation monitor can refer to the header timestamp to 
 
 ### Consumption notification
 
-On the other hand, there are some cases where the header timestamp given at the starting node is not sent from the end node of the path. 
+On the other hand, there are some cases where the header timestamp given at the starting node is not sent from the end node of the path.
 
 #### Motivation to serve the dedicated message
 

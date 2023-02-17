@@ -522,7 +522,7 @@ bool TildeTimingMonitor::isValidDeadlineTimer(TildePathConfig & pinfo, DeadlineT
 // update diagnostics data
 void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
-  RCLCPP_INFO(get_logger(), "[%.6f]--[%s]:%04d called", get_now(), __func__, __LINE__);
+  // RCLCPP_INFO(get_logger(), "[%.6f]--[%s]:%04d called", get_now(), __func__, __LINE__);
   using diagnostic_msgs::msg::DiagnosticStatus;
 
   auto diag_period = updater_->getPeriod().seconds();
@@ -543,8 +543,8 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
     }
     std::string key = fmt::format("path#{}: {}", pinfo.index, pinfo.path_name.c_str());
     std::string val = fmt::format(
-      "deadline miss count {}: path period {}(ms) deadline time {}(ms) threshold {}",
-      diff, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
+      "deadline miss count {} total {}: path period {}(ms) deadline time {}(ms) threshold {}",
+      diff, pinfo.deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
     stat.add(key, val.c_str());
     pinfo.prev_deadline_miss_count = pinfo.deadline_miss_count;
   }

@@ -135,7 +135,7 @@ public:
     auto elapse_duration =
       std::chrono::duration_cast<std::chrono::nanoseconds>(cur - mPrev).count();
     auto elapse = static_cast<double>(elapse_duration);
-    elapse /= (1000 * 1000 * 1000);
+    elapse /= 1e9;
     addData(elapse);
   }
   void setPrev() { mPrev = std::chrono::system_clock::now(); }

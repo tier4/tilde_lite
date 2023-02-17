@@ -6,7 +6,7 @@
 
 Autonomous driving is a real-time system. The **Topic State Monitor** checks the real-time constraints of the system. To achieve the real-time constraints, a certain monitoring functionality is required to detect when nodes are performing below tolerance and react appropriately.
 
-![Introduction of Real-Time](image/introduction-realtime.drawio.svg)
+![Introduction of Real-Time](images/introduction-realtime.drawio.svg)
 
 This figure shows the high-level architecture of Autoware.
 An autonomous driving system consists of a set of functions.
@@ -25,7 +25,7 @@ Each column shows a real-time constraint corresponding to a path in the architec
 
 ## Formulation
 
-![Formulation of Real-Time](image/formulation-realtime.drawio.svg)
+![Formulation of Real-Time](images/formulation-realtime.drawio.svg)
 
 [A path in a graph is a finite sequence of edges which joins a sequence of vertices which are all distinct (and since the vertices are distinct, so are the edges)](<https://en.wikipedia.org/wiki/Path_(graph_theory)>).
 The words `trail` and `walk` are not used in this context since each node and edge would have only one role in a path
@@ -72,7 +72,7 @@ which are not changed at run-time.
 
 The design of Topic State Monitor focuses on Requirement 1. Requirement 2 is designed in [Emergency Handler](https://github.com/autowarefoundation/autoware.universe/tree/main/system/emergency_handler).
 
-![Introduction of Real-Time](image/design-realtime.drawio.svg)
+![Introduction of Real-Time](images/design-realtime.drawio.svg)
 
 Topic State Monitor subscribes the topic published by `Node E` in `Path_i`.
 Topic State Monitor detects a deadline miss of the `j`-th job of `P_i`

@@ -23,7 +23,7 @@ The initial design of the timing violation framework is intended to be deployed 
 
 To fulfill the policy, the framework utilizes existing timestamp in header of topic messages.
 
-![Basic idea](./docs/images/timing-violation-detection-basic-design.png)
+![Basic idea](./docs/images/timing_violation_detection_basic_design.png)
 
 The framework assumes that the timestamp, represented `ts: t0` in the figure, is not changed while it goes through the path.
 

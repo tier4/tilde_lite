@@ -16,10 +16,7 @@
 #define TILDE_TIMING_MONITOR__TILDE_TIMING_MONITOR_CORE_HPP_
 
 #include "builtin_interfaces/msg/time.hpp"
-#include "tilde_msg/msg/message_tracking_tag.hpp"
-#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_command.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
-#include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_infos.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialization.hpp>
@@ -36,8 +33,6 @@
 
 namespace tilde_timing_monitor
 {
-using MessageTrackingTag = tilde_msg::msg::MessageTrackingTag;
-
 struct DeadlineTimer
 {
   int64_t self_j;
@@ -128,7 +123,6 @@ private:
   void loadRequiredPaths(const std::string & key);
 
   // Subscriber
-  void onMttTopic(const MessageTrackingTag::ConstSharedPtr msg, TildePathConfig & pinfo);
   void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo);
   void topicCallback(
     TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);

@@ -290,7 +290,7 @@ bool TildeTimingMonitorDebug::topicStatis(
   if (hz_over != dinfo_ptr->hz.getOver() || sub_over != dinfo_ptr->sub_interval.getOver()) {
     over_f = true;
   }
-  dinfo_ptr->com_delay.addData(cur_ros - pinfo.r_i_j_1, pinfo.d_i);
+  dinfo_ptr->com_delay.addData(cur_ros - pub_time, pinfo.d_i);
   dinfo_ptr->response_time.addData(response_time);
   if (response_time >= pinfo.d_i) {
     dinfo_ptr->too_long_response_time.addData(response_time);

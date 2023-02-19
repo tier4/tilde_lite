@@ -38,6 +38,11 @@
 #include <unordered_map>
 #include <vector>
 
+#define LOC { \
+  std::string fs = fmt::format("[{}]:{}", __func__, __LINE__); \
+  std::cout << fs.c_str() << std::endl; \
+}
+
 namespace tilde_timing_monitor
 {
 class MinMax
@@ -151,7 +156,8 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  explicit TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
+  TildePathDebug(std::shared_ptr<TildePathConfig> & pinfo_ptr)
+  : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;
     deadline_miss_count = 0lu;
@@ -167,7 +173,7 @@ public:
     enable_detect = true;
   }
 
-  const TildePathConfig * pinfo_ptr;
+  std::shared_ptr<TildePathConfig> pinfo_ptr;
   //
   uint64_t valid_topic_count;
   uint64_t discard_topic_count;

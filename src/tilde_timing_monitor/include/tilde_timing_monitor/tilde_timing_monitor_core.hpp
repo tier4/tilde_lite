@@ -48,8 +48,7 @@ struct DeadlineTimer
 
 using DeadlineTimerMap = std::unordered_map<uint64_t, DeadlineTimer>;
 
-enum class e_stat
-{
+enum class e_stat {
   ST_NONE,
   ST_INIT,
   ST_DETECT,
@@ -67,10 +66,10 @@ public:
   std::string level;
   std::mutex * p_mutex;
 
-  TildePathConfig(uint32_t index, std::mutex * mtx)
-  : index(index), p_mutex(mtx)
+  TildePathConfig(uint32_t index, std::mutex * mtx) : index(index), p_mutex(mtx)
   {
-    std::string fs = fmt::format("[{}]:{} >>> constructor({}) >>>", __func__, __LINE__, this->index);
+    std::string fs =
+      fmt::format("[{}]:{} >>> constructor({}) >>>", __func__, __LINE__, this->index);
     std::cout << fs.c_str() << std::endl;
     status = e_stat::ST_NONE;
     cur_j = 0l;
@@ -121,7 +120,9 @@ private:
 
   void loadTargetPaths();
   // Subscriber
-  void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, std::shared_ptr<TildePathConfig> pinfo_ptr);
+  void onGenTopic(
+    const std::shared_ptr<rclcpp::SerializedMessage> msg,
+    std::shared_ptr<TildePathConfig> pinfo_ptr);
   void topicCallback(
     TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
   bool isOverDeadline(

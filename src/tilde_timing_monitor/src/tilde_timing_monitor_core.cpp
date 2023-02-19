@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
+
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -81,7 +82,7 @@ TildeTimingMonitor::TildeTimingMonitor()
   try {
     loadTargetPaths();
   } catch (const rclcpp::exceptions::RCLError & e) {
-    RCLCPP_INFO( get_logger(), "\n[Exception] %s", e.what());
+    RCLCPP_INFO(get_logger(), "\n[Exception] %s", e.what());
     exit(-1);
   }
 
@@ -134,12 +135,12 @@ void TildeTimingMonitor::loadTargetPaths()
 
   // Load path names from parameter
   std::set<std::string> path_names;
-  uint32_t index = 0; // path_i
+  uint32_t index = 0;  // path_i
   for (const auto & param : param_names) {
     const auto split_names = split(param, '.');
     const auto & path_name = split_names.at(1);
     const auto & path_name_with_prefix = fmt::format("{0}.{1}", target, path_name);
-    RCLCPP_INFO( get_logger(), "path_info: %s", path_name_with_prefix.c_str());
+    RCLCPP_INFO(get_logger(), "path_info: %s", path_name_with_prefix.c_str());
     if (path_names.count(path_name_with_prefix) != 0) {
       continue;  // Skip duplicated path
     }
@@ -147,7 +148,7 @@ void TildeTimingMonitor::loadTargetPaths()
     std::mutex * mtx = new std::mutex;
     target_paths_map_.insert(std::make_pair(index, std::make_shared<TildePathConfig>(index, mtx)));
     std::shared_ptr<TildePathConfig> & pinfo_ptr = target_paths_map_[index];
-    index++; // path_i update
+    index++;  // path_i update
     // Register name for dup check
     path_names.insert(path_name_with_prefix);
     // set parameters per path
@@ -165,9 +166,8 @@ void TildeTimingMonitor::loadTargetPaths()
     const auto level_key = path_name_with_prefix + std::string(".severity");
     get_parameter_or(level_key, pinfo_ptr->level, std::string("none"));
     const auto violation_count_thresh =
-    path_name_with_prefix + std::string(".violation_count_thresh");
-    get_parameter_or(
-      violation_count_thresh, pinfo_ptr->violation_count_thresh, 1lu);
+      path_name_with_prefix + std::string(".violation_count_thresh");
+    get_parameter_or(violation_count_thresh, pinfo_ptr->violation_count_thresh, 1lu);
     RCLCPP_INFO(
       get_logger(), "path_name=%s %s [%s]\npath_i=%u p_i=%lf d_i=%lf lv=%s ths=%lu",
       pinfo_ptr->path_name.c_str(), pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str(),
@@ -199,7 +199,8 @@ void TildeTimingMonitor::onGenTopic(
     serializer.deserialize_message(msg.get(), &header_msg);
   } catch (const rclcpp::exceptions::RCLError & e) {
     RCLCPP_INFO(
-      get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
+      get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo_ptr->topic.c_str(),
+      pinfo_ptr->mtype.c_str());
     exit(-1);
   }
   double cur_ros = get_now();
@@ -541,9 +542,6 @@ void TildeTimingMonitor::stopDetect(TildePathConfig & pinfo)
   pinfo.deadline_timer.clear();
 }
 
-double TildeTimingMonitor::get_now()
-{
-  return nano_to_sec(get_clock()->now().nanoseconds());
-}
+double TildeTimingMonitor::get_now() { return nano_to_sec(get_clock()->now().nanoseconds()); }
 
 }  // namespace tilde_timing_monitor

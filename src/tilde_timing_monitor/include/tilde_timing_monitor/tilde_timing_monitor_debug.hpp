@@ -37,10 +37,11 @@
 #include <unordered_map>
 #include <vector>
 
-#define LOC { \
-  std::string fs = fmt::format("[{}]:{}", __func__, __LINE__); \
-  std::cout << fs.c_str() << std::endl; \
-}
+#define LOC                                                      \
+  {                                                              \
+    std::string fs = fmt::format("[{}]:{}", __func__, __LINE__); \
+    std::cout << fs.c_str() << std::endl;                        \
+  }
 
 namespace tilde_timing_monitor
 {
@@ -155,8 +156,7 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  TildePathDebug(std::shared_ptr<TildePathConfig> & pinfo_ptr)
-  : pinfo_ptr(pinfo_ptr)
+  TildePathDebug(std::shared_ptr<TildePathConfig> & pinfo_ptr) : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;
     deadline_miss_count = 0lu;

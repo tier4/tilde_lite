@@ -531,7 +531,7 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
   dbg_info_->cbStatisEnter(__func__);
 
   for (auto & pinfo : required_paths_map_.at(params_.mode)) {
-    std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
+    //std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
     
     uint64_t diff = pinfo.deadline_miss_count - pinfo.prev_deadline_miss_count;
     if (diff >= pinfo.diag_threshold) {
@@ -544,9 +544,9 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
     std::string key = fmt::format("path#{}: {}", pinfo.index, pinfo.path_name.c_str());
     std::string val = fmt::format(
       "deadline miss count {} total {}: path period {}(ms) deadline time {}(ms) threshold {}",
-      diff, pinfo.deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
+      diff, diff + pinfo.prev_deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
     stat.add(key, val.c_str());
-    pinfo.prev_deadline_miss_count = pinfo.deadline_miss_count;
+    pinfo.prev_deadline_miss_count += diff;
   }
   int8_t level = DiagnosticStatus::OK;
   std::string msg = fmt::format("OK: diag period {}(sec)", diag_period);

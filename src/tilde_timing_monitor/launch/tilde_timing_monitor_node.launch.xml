@@ -1,17 +1,13 @@
 <launch>
   <arg name="config_file" default="$(find-pkg-share tilde_timing_monitor)/config/tilde_path_info.yaml"/>
   <arg name="debug" default="false"/>
-  <arg name="mode" default="test"/>
   <arg name="use_sim_time" default="true"/>
-  <arg name="pseudo_ros_time" default="false"/>
 
   <node pkg="tilde_timing_monitor" exec="tilde_timing_monitor" name="tilde_timing_monitor" output="screen">
     <remap from="~/output/tilde_timing_monitor" to="/tilde_timing_monitor"/>
 
     <param from="$(var config_file)"/>
     <param name="debug" value="$(var debug)"/>
-    <param name="mode" value="$(var mode)"/>
     <param name="use_sim_time" value="$(var use_sim_time)"/>
-    <param name="pseudo_ros_time" value="$(var pseudo_ros_time)"/>
   </node>
 </launch>

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
-
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -60,6 +59,7 @@ std::vector<std::string> split(const std::string & str, const char delim)
   return elems;
 }
 
+std::map<uint32_t, std::shared_ptr<TildePathConfig>> target_paths_map_;
 std::vector<rclcpp::GenericSubscription::SharedPtr> gen_sub_buffer_;
 std::shared_ptr<TildeTimingMonitorDebug> dbg_info_;
 
@@ -74,49 +74,44 @@ TildeTimingMonitor::TildeTimingMonitor()
 {
   // Parameters
   get_parameter_or<bool>("debug", params_.debug_ctrl, false);
-  get_parameter_or<bool>("pseudo_ros_time", params_.pseudo_ros_time, false);
-  get_parameter_or<std::string>("mode", params_.mode, "test");
-  RCLCPP_INFO(
-    get_logger(), "mode=%s debug=%d pseudo_ros_time=%d", params_.mode.c_str(), params_.debug_ctrl,
-    params_.pseudo_ros_time);
+  // init statistics, log and debug
   dbg_info_ = std::make_shared<TildeTimingMonitorDebug>(version, params_.debug_ctrl);
 
   // load topics and paths
-  loadRequiredPaths(params_.mode);
+  try {
+    loadTargetPaths();
+  } catch (const rclcpp::exceptions::RCLError & e) {
+    RCLCPP_INFO( get_logger(), "\n[Exception] %s", e.what());
+    exit(-1);
+  }
 
-  RCLCPP_INFO(get_logger(), "[%s]:%04d called", __func__, __LINE__);
   clock_.reset(new rclcpp::Clock(RCL_ROS_TIME));
   rclcpp::QoS qos = rclcpp::QoS{1};
-  uint32_t index = 0;
-  for (auto & pinfo : required_paths_map_.at(params_.mode)) {
+  for (auto & pair : target_paths_map_) {
+    auto pinfo_ptr = pair.second;
     // Subscriber
     try {
       const auto gen_sub = create_generic_subscription(
-        pinfo.topic, pinfo.mtype, qos,
-        [this, &pinfo](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
-          TildeTimingMonitor::onGenTopic(msg, pinfo);
+        pinfo_ptr->topic, pinfo_ptr->mtype, qos,
+        //[this, &pinfo_ptr](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
+        [this, pinfo_ptr](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
+          TildeTimingMonitor::onGenTopic(msg, pinfo_ptr);
         });
       gen_sub_buffer_.push_back(gen_sub);
     } catch (const rclcpp::exceptions::RCLError & e) {
       RCLCPP_INFO(
-        get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(),
-        pinfo.mtype.c_str());
+        get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo_ptr->topic.c_str(),
+        pinfo_ptr->mtype.c_str());
       exit(-1);
     }
     //
-    dbg_info_->registerPathDebugInfo(index, std::make_shared<TildePathDebug>(&pinfo));
-    pinfo.index = index++;
+    dbg_info_->registerPathDebugInfo(pinfo_ptr->index, std::make_shared<TildePathDebug>(pinfo_ptr));
   }
 
   // Publisher
   pub_tilde_deadline_miss_ =
     create_publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>(
       "~/output/tilde_timing_monitor/deadline_miss", rclcpp::QoS{1});
-
-  // pseudo ros timer init
-  if (params_.pseudo_ros_time) {
-    pseudoRosTimeInit();
-  }
   RCLCPP_INFO(get_logger(), "\n\n--- start ---\n");
 }
 
@@ -125,81 +120,76 @@ void TildeTimingMonitor::registerNodeToDebug(const std::shared_ptr<TildeTimingMo
   dbg_info_->registerNodeToDebug(node);
 }
 
-// load required paths and params from config yaml
-void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
+// load target paths and params from config yaml
+void TildeTimingMonitor::loadTargetPaths()
 {
-  const auto param_key = std::string("required_paths.") + key;
+  const auto target = std::string("target_paths");
+  const auto param_names = this->list_parameters({target}, 3).names;
 
-  const uint64_t depth = 4;
-  const auto param_names = this->list_parameters({param_key}, depth).names;
+  RCLCPP_INFO(get_logger(), "[%s]:%04d at", __func__, __LINE__);
 
   if (param_names.empty()) {
-    throw std::runtime_error(fmt::format("no parameter found: {}", param_key));
+    throw std::runtime_error(fmt::format("config: no parameter found"));
   }
 
-  // Load path names from parameter key
+  // Load path names from parameter
   std::set<std::string> path_names;
-  RequiredPaths required_paths;
-
-  for (const auto & param_name : param_names) {
-    // Example of param_name: required_paths.key.end_point_topic.parameter
-    const auto split_names = split(param_name, '.');
-    const auto & param_required_paths = split_names.at(0);
-    const auto & param_key = split_names.at(1);
-    const auto & param_topic = split_names.at(2);
-
-    const auto & path_name_with_prefix =
-      fmt::format("{0}.{1}.{2}", param_required_paths, param_key, param_topic);
-
-    RCLCPP_INFO(
-      get_logger(), "path_info: key=%s path=%s param=%s topic=%s", key.c_str(),
-      param_required_paths.c_str(), param_key.c_str(), param_topic.c_str());
-
+  uint32_t index = 0; // path_i
+  for (const auto & param : param_names) {
+    const auto split_names = split(param, '.');
+    const auto & path_name = split_names.at(1);
+    const auto & path_name_with_prefix = fmt::format("{0}.{1}", target, path_name);
+    RCLCPP_INFO( get_logger(), "path_info: %s", path_name_with_prefix.c_str());
     if (path_names.count(path_name_with_prefix) != 0) {
       continue;  // Skip duplicated path
     }
-
-    TildePathConfig path_config;
-    // Register name
-    path_names.insert(path_name_with_prefix);
-
-    const auto path_name_key = path_name_with_prefix + std::string(".path_name");
-    get_parameter_or(path_name_key, path_config.path_name, std::string("none"));
-    path_config.topic = param_topic;
-    const auto mtype_key = path_name_with_prefix + std::string(".mtype");
-    get_parameter_or(
-      mtype_key, path_config.mtype,
-      std::string("tilde_timing_monitor_interfaces/msg/MessageTrackingTag"));
-    const auto path_i_key = path_name_with_prefix + std::string(".path_i");
-    get_parameter_or(path_i_key, path_config.path_i, 0lu);
-    const auto periodic_key = path_name_with_prefix + std::string(".p_i");
-    get_parameter_or(periodic_key, path_config.p_i, 0.0);
-    path_config.p_i /= 1000;
-    const auto deadline_key = path_name_with_prefix + std::string(".d_i");
-    get_parameter_or(deadline_key, path_config.d_i, 0.0);
-    path_config.d_i /= 1000;
-    const auto level_key = path_name_with_prefix + std::string(".level");
-    get_parameter_or(level_key, path_config.level, std::string("none"));
-
-    RCLCPP_INFO(
-      get_logger(), "path_name=%s %s [%s]\npath_i=%lu p_i=%lf d_i=%lf lv=%s",
-      path_config.path_name.c_str(), path_config.topic.c_str(), path_config.mtype.c_str(),
-      path_config.path_i, path_config.p_i, path_config.d_i, path_config.level.c_str());
     // Register each path
-    required_paths.push_back(path_config);
+    std::mutex * mtx = new std::mutex;
+    target_paths_map_.insert(std::make_pair(index, std::make_shared<TildePathConfig>(index, mtx)));
+    std::shared_ptr<TildePathConfig> & pinfo_ptr = target_paths_map_[index];
+    index++; // path_i update
+    // Register name for dup check
+    path_names.insert(path_name_with_prefix);
+    // set parameters per path
+    pinfo_ptr->path_name = path_name;
+    const auto path_topic = path_name_with_prefix + std::string(".topic");
+    get_parameter_or(path_topic, pinfo_ptr->topic, std::string("none"));
+    const auto mtype_key = path_name_with_prefix + std::string(".message_type");
+    get_parameter_or(mtype_key, pinfo_ptr->mtype, std::string("none"));
+    const auto periodic_key = path_name_with_prefix + std::string(".period");
+    get_parameter_or(periodic_key, pinfo_ptr->p_i, 0.0);
+    pinfo_ptr->p_i /= 1000;
+    const auto deadline_key = path_name_with_prefix + std::string(".deadline");
+    get_parameter_or(deadline_key, pinfo_ptr->d_i, 0.0);
+    pinfo_ptr->d_i /= 1000;
+    const auto level_key = path_name_with_prefix + std::string(".severity");
+    get_parameter_or(level_key, pinfo_ptr->level, std::string("none"));
+    const auto violation_count_thresh =
+    path_name_with_prefix + std::string(".violation_count_thresh");
+    get_parameter_or(
+      violation_count_thresh, pinfo_ptr->violation_count_thresh, 1lu);
+    RCLCPP_INFO(
+      get_logger(), "path_name=%s %s [%s]\npath_i=%u p_i=%lf d_i=%lf lv=%s ths=%lu",
+      pinfo_ptr->path_name.c_str(), pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str(),
+      pinfo_ptr->index, pinfo_ptr->p_i, pinfo_ptr->d_i, pinfo_ptr->level.c_str(),
+      pinfo_ptr->violation_count_thresh);
   }
-  required_paths_map_.insert(std::make_pair(key, required_paths));
 }
 
 /**
  * topic callback
  */
 void TildeTimingMonitor::onGenTopic(
-  const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo)
+  const std::shared_ptr<rclcpp::SerializedMessage> msg, std::shared_ptr<TildePathConfig> pinfo_ptr)
 {
-  std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
-  if (pinfo.status == e_stat::ST_NONE) {
-    pinfo.status = e_stat::ST_INIT;
+  if (!pinfo_ptr) {
+    RCLCPP_INFO(get_logger(), "[%s]:%04d pinfo_ptr invalid", __func__, __LINE__);
+    return;
+  }
+  std::lock_guard<std::mutex> lock(*pinfo_ptr->p_mutex);
+
+  if (pinfo_ptr->status == e_stat::ST_NONE) {
+    pinfo_ptr->status = e_stat::ST_INIT;
   }
   dbg_info_->cbStatisEnter(__func__);
 
@@ -209,16 +199,16 @@ void TildeTimingMonitor::onGenTopic(
     serializer.deserialize_message(msg.get(), &header_msg);
   } catch (const rclcpp::exceptions::RCLError & e) {
     RCLCPP_INFO(
-      get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo.topic.c_str(), pinfo.mtype.c_str());
+      get_logger(), "\n[Exception] %s %s [%s]", e.what(), pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
     exit(-1);
   }
   double cur_ros = get_now();
   double pub_time = cur_ros;
-  pinfo.r_i_j_1_stamp = header_msg.stamp;
-  pinfo.r_i_j_1 = stamp_to_sec(pinfo.r_i_j_1_stamp);
+  pinfo_ptr->r_i_j_1_stamp = header_msg.stamp;
+  pinfo_ptr->r_i_j_1 = stamp_to_sec(pinfo_ptr->r_i_j_1_stamp);
   // Response time includes communication delay until subscription
-  auto response_time = cur_ros - pinfo.r_i_j_1;
-  topicCallback(pinfo, pub_time, cur_ros, response_time);
+  auto response_time = cur_ros - pinfo_ptr->r_i_j_1;
+  topicCallback(*pinfo_ptr, pub_time, cur_ros, response_time);
 
   dbg_info_->cbStatisExit(__func__);
 }
@@ -331,7 +321,7 @@ void TildeTimingMonitor::restartTimers(TildePathConfig & pinfo, double & cur_ros
 // interval timer(pre-periodic timer) callback
 void TildeTimingMonitor::onIntervalTimer(TildePathConfig & pinfo)
 {
-  std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
+  std::lock_guard<std::mutex> lock(*pinfo.p_mutex);
 
   dbg_info_->cbStatisEnter(__func__);
 
@@ -347,7 +337,7 @@ void TildeTimingMonitor::onIntervalTimer(TildePathConfig & pinfo)
 // periodic timer callback
 void TildeTimingMonitor::onPeriodicTimer(TildePathConfig & pinfo)
 {
-  std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
+  std::lock_guard<std::mutex> lock(*pinfo.p_mutex);
 
   if (pinfo.status == e_stat::ST_NONE) {
     return;
@@ -374,7 +364,7 @@ void TildeTimingMonitor::onPeriodicTimer(TildePathConfig & pinfo)
 // deadline timer callback
 void TildeTimingMonitor::onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer & dm)
 {
-  std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
+  std::lock_guard<std::mutex> lock(*pinfo.p_mutex);
 
   if (pinfo.status == e_stat::ST_NONE) {
     return;
@@ -520,7 +510,7 @@ void TildeTimingMonitor::pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self
   auto m = tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss();
   m.path_name = pinfo.path_name.c_str();
   m.topic = pinfo.topic.c_str();
-  m.path_i = pinfo.path_i;
+  m.path_i = pinfo.index;
   m.deadline_timer = pinfo.d_i;
   m.periodic_timer = pinfo.p_i;
   m.last_r_i_j_1_float = pinfo.r_i_j_1;
@@ -530,7 +520,6 @@ void TildeTimingMonitor::pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self
   m.self_j = self_j;
   m.cur_j = pinfo.cur_j;
   m.completed_j = pinfo.completed_j;
-  m.mode = params_.mode.c_str();
   m.header.stamp = get_clock()->now();
   pub_tilde_deadline_miss_->publish(m);
 }
@@ -552,51 +541,9 @@ void TildeTimingMonitor::stopDetect(TildePathConfig & pinfo)
   pinfo.deadline_timer.clear();
 }
 
-// utils
 double TildeTimingMonitor::get_now()
 {
-  if (!params_.pseudo_ros_time) {
-    return nano_to_sec(get_clock()->now().nanoseconds());
-  }
-  return init_pseudo_ros_time +
-         (nano_to_sec(steady_clock_->now().nanoseconds()) - init_dur_pseudo_ros_time);
-}
-
-void TildeTimingMonitor::adjustPseudoRosTime()
-{
-  RCLCPP_INFO(get_logger(), "%s:%04d\n", __func__, __LINE__);
-  for (int i = 0; i < 100; i++) {
-    double pseudo = get_now();
-    double ros_time = nano_to_sec(get_clock()->now().nanoseconds());
-    if (pseudo == ros_time) {
-      break;
-    } else {
-      init_pseudo_ros_time -= (pseudo - ros_time);
-    }
-  }
-}
-
-void TildeTimingMonitor::pseudoRosTimeInit()
-{
-  init_pseudo_ros_time = 0.0;
-  for (;;) {
-    init_pseudo_ros_time = nano_to_sec(get_clock()->now().nanoseconds());
-    if (init_pseudo_ros_time != 0.0) {
-      break;
-    }
-    sleep(1);
-  }
-  steady_clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
-  init_dur_pseudo_ros_time = nano_to_sec(steady_clock_->now().nanoseconds());
-  adjustPseudoRosTime();
-  RCLCPP_INFO(get_logger(), "%s:%04d\n", __func__, __LINE__);
-
-  RCLCPP_INFO(
-    get_logger(), "get_now()=%lf ros_time=%lf", get_now(),
-    nano_to_sec(get_clock()->now().nanoseconds()));
-  RCLCPP_INFO(
-    get_logger(), "init_pseudo_ros_time=%lf init_dur_pseudo_ros_time=%lf", init_pseudo_ros_time,
-    init_dur_pseudo_ros_time);
+  return nano_to_sec(get_clock()->now().nanoseconds());
 }
 
 }  // namespace tilde_timing_monitor

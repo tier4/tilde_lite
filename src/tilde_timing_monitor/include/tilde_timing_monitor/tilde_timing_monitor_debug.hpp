@@ -151,7 +151,7 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
+  explicit TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;
     deadline_miss_count = 0lu;

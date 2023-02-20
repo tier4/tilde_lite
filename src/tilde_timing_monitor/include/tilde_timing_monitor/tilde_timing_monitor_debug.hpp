@@ -27,6 +27,7 @@
 #include "std_msgs/msg/header.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include <algorithm>
 #include <cfloat>
 #include <chrono>
 #include <deque>
@@ -135,7 +136,7 @@ public:
     auto elapse_duration =
       std::chrono::duration_cast<std::chrono::nanoseconds>(cur - mPrev).count();
     auto elapse = static_cast<double>(elapse_duration);
-    elapse /= (1000 * 1000 * 1000);
+    elapse /= 1e9;
     addData(elapse);
   }
   void setPrev() { mPrev = std::chrono::system_clock::now(); }
@@ -150,7 +151,7 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
+  explicit TildePathDebug(const TildePathConfig * pinfo_ptr) : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;
     deadline_miss_count = 0lu;

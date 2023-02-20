@@ -18,6 +18,7 @@
 #include "builtin_interfaces/msg/time.hpp"
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialization.hpp>
 
@@ -26,6 +27,8 @@
 
 #include <chrono>
 #include <deque>
+#include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -71,6 +74,7 @@ public:
     completed_j = -1l;
     tm_mutex = mtx;
     deadline_timer_manage = 0lu;
+    deadline_miss_count = 0lu;
   }
   // variables
   e_stat status;
@@ -84,6 +88,10 @@ public:
   double r_i_j_1;
   double r_i_j;
   uint64_t deadline_timer_manage;
+  // diagnostics
+  uint64_t diag_threshold;
+  uint64_t deadline_miss_count;
+  uint64_t prev_deadline_miss_count;
 };
 
 using RequiredPaths = std::vector<TildePathConfig>;
@@ -138,11 +146,10 @@ private:
   void startPeriodicTimer(TildePathConfig & pinfo, double & time_val);
   void startDeadlineTimer(TildePathConfig & pinfo, double & start_time, double & time_val);
   bool isValidDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer & dm);
-  // Publisher
-  rclcpp::Publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>::SharedPtr
-    pub_tilde_deadline_miss_;
-  void pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self_j, double & start);
 
+  void diagDataUpdate(diagnostic_updater::DiagnosticStatusWrapper & stat);
+
+  // debug
   void stopDetect(TildePathConfig & pinfo);
 
   void adjustPseudoRosTime();

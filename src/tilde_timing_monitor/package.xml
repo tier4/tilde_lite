@@ -8,9 +8,9 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <depend>diagnostic_updater</depend>
   <depend>fmt</depend>
   <depend>rclcpp</depend>
-  <depend>diagnostic_updater</depend>
   <depend>tilde_msg</depend>
   <depend>tilde_timing_monitor_interfaces</depend>
 

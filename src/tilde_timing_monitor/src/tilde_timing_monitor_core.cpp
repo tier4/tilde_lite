@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
+
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -541,8 +542,8 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
     }
     std::string key = fmt::format("path#{}: {}", pinfo.index, pinfo.path_name.c_str());
     std::string val = fmt::format(
-      "deadline miss count {} total {}: path period {}(ms) deadline time {}(ms) threshold {}",
-      diff, diff + pinfo.prev_deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
+      "deadline miss count {} total {}: path period {}(ms) deadline time {}(ms) threshold {}", diff,
+      diff + pinfo.prev_deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
     stat.add(key, val.c_str());
     pinfo.prev_deadline_miss_count += diff;
   }

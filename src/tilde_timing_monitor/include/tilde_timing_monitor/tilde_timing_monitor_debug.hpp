@@ -27,6 +27,7 @@
 #include "std_msgs/msg/header.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include <algorithm>
 #include <cfloat>
 #include <chrono>
 #include <deque>
@@ -36,7 +37,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 namespace tilde_timing_monitor
 {

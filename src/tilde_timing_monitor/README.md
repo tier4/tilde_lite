@@ -92,7 +92,7 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
 
 | name                | content                             |
 | ------------------- | ----------------------------------- |
-| diag_period_sec     | /diagnostics topic interval        |
+| diag_period_sec     | /diagnostics topic interval         |
 | required_paths      | measurement path information        |
 | mode (ex. test)     | measurement path set id             |
 | topic name          | end point node published topic name |
@@ -134,7 +134,7 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 ## output
 
 - **diagnostics topic**
-Publish /diagnostcs every diag_period_sec specified in config
+  Publish /diagnostcs every diag_period_sec specified in config
 
 /diagnostics
 
@@ -144,35 +144,34 @@ header:
   stamp:
     sec: 1585897275
     nanosec: 1057893
-  frame_id: ''
+  frame_id: ""
 status:
-- level: "\0"
-  name: 'tilde_timing_monitor: timing violation'
-  message: 'OK: diag period 5(sec)'
-  hardware_id: hosta
-  values:
-  - key: 'path#0: EKF to NDT pose'
-    value: 'deadline miss count 0 total 0: path period 0.1(ms) deadline time 0.2(ms) threshold 1'
-  - key: 'path#1: PointcloudPreprocessor to NDT'
-    value: 'deadline miss count 0 total 2: path period 0.1(ms) deadline time 0.15(ms) threshold 1'
+  - level: "\0"
+    name: "tilde_timing_monitor: timing violation"
+    message: "OK: diag period 5(sec)"
+    hardware_id: hosta
+    values:
+      - key: "path#0: EKF to NDT pose"
+        value: "deadline miss count 0 total 0: path period 0.1(ms) deadline time 0.2(ms) threshold 1"
+      - key: "path#1: PointcloudPreprocessor to NDT"
+        value: "deadline miss count 0 total 2: path period 0.1(ms) deadline time 0.15(ms) threshold 1"
 ---
 header:
   stamp:
     sec: 1585897280
     nanosec: 8071915
-  frame_id: ''
+  frame_id: ""
 status:
-- level: "\x01"
-  name: 'tilde_timing_monitor: timing violation'
-  message: 'Warn: diag period 5(sec)'
-  hardware_id: hosta
-  values:
-  - key: 'path#0: EKF to NDT pose'
-    value: 'deadline miss count 43 total 43: path period 0.1(ms) deadline time 0.2(ms) threshold 1'
-  - key: 'path#1: PointcloudPreprocessor to NDT'
-    value: 'deadline miss count 45 total 47: path period 0.1(ms) deadline time 0.15(ms) threshold 1'
+  - level: "\x01"
+    name: "tilde_timing_monitor: timing violation"
+    message: "Warn: diag period 5(sec)"
+    hardware_id: hosta
+    values:
+      - key: "path#0: EKF to NDT pose"
+        value: "deadline miss count 43 total 43: path period 0.1(ms) deadline time 0.2(ms) threshold 1"
+      - key: "path#1: PointcloudPreprocessor to NDT"
+        value: "deadline miss count 45 total 47: path period 0.1(ms) deadline time 0.15(ms) threshold 1"
 ---
-
 ```
 
 - **information and statistics topic**

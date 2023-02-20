@@ -19,7 +19,6 @@
 #include "tilde_timing_monitor_interfaces/msg/tilde_timing_monitor_deadline_miss.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialization.hpp>
 

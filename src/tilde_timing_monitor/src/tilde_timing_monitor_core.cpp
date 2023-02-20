@@ -531,8 +531,6 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
   dbg_info_->cbStatisEnter(__func__);
 
   for (auto & pinfo : required_paths_map_.at(params_.mode)) {
-    //std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
-    
     uint64_t diff = pinfo.deadline_miss_count - pinfo.prev_deadline_miss_count;
     if (diff >= pinfo.diag_threshold) {
       if (std::equal(pinfo.level.begin(), pinfo.level.end(), "error") == true) {

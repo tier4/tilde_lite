@@ -36,6 +36,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 namespace tilde_timing_monitor
 {

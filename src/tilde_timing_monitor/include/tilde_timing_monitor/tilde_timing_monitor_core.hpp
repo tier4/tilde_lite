@@ -28,6 +28,8 @@
 
 #include <chrono>
 #include <deque>
+#include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <unordered_map>

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
-
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -24,27 +23,28 @@
 
 #define FMT_HEADER_ONLY
 #include <fmt/format.h>
+#include <sys/socket.h>
 
 namespace tilde_timing_monitor
 {
 // const
-static constexpr char version[] = "v0.20";
+static constexpr char version[] = "v0.21";
 
 double init_pseudo_ros_time;
 double init_dur_pseudo_ros_time;
 
 // utils
-inline double nano_to_sec(double nano) { return nano / (1000.0 * 1000.0 * 1000.0); }
+inline double nano_to_sec(double nano) { return nano / 1e9; }
 inline double stamp_to_sec(builtin_interfaces::msg::Time stamp)
 {
-  return stamp.sec + stamp.nanosec / (1000.0 * 1000.0 * 1000.0);
+  return stamp.sec + stamp.nanosec / 1e9;
 }
 builtin_interfaces::msg::Time sec_to_stamp(double sec_time)
 {
   // builtin_interfaces.msg.Time stamp;
   auto stamp = builtin_interfaces::msg::Time();
   auto sec = std::floor(sec_time);
-  auto nano = (sec_time - sec) * (1000 * 1000 * 1000);
+  auto nano = (sec_time - sec) * 1e9;
   stamp.sec = static_cast<uint32_t>(sec);
   stamp.nanosec = static_cast<uint32_t>(nano);
   return stamp;
@@ -62,6 +62,7 @@ std::vector<std::string> split(const std::string & str, const char delim)
 
 std::vector<rclcpp::GenericSubscription::SharedPtr> gen_sub_buffer_;
 std::shared_ptr<TildeTimingMonitorDebug> dbg_info_;
+std::shared_ptr<diagnostic_updater::Updater> updater_;
 
 /**
  * tilde timing monitor node
@@ -108,10 +109,15 @@ TildeTimingMonitor::TildeTimingMonitor()
     pinfo.index = index++;
   }
 
-  // Publisher
-  pub_tilde_deadline_miss_ =
-    create_publisher<tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss>(
-      "~/output/tilde_timing_monitor/deadline_miss", rclcpp::QoS{1});
+  // Diagnostic Updater
+  const auto diag_period = std::string("diag_period_sec");
+  double diag_period_val;
+  this->get_parameter_or(diag_period, diag_period_val, 5.0);
+  updater_ = std::make_shared<diagnostic_updater::Updater>(this, diag_period_val);
+  char host_name[HOST_NAME_MAX + 1];
+  gethostname(host_name, sizeof(host_name));
+  updater_->setHardwareID(host_name);
+  updater_->add("timing violation", this, &TildeTimingMonitor::diagDataUpdate);
 
   // pseudo ros timer init
   if (params_.pseudo_ros_time) {
@@ -178,13 +184,16 @@ void TildeTimingMonitor::loadRequiredPaths(const std::string & key)
     const auto deadline_key = path_name_with_prefix + std::string(".d_i");
     get_parameter_or(deadline_key, path_config.d_i, 0.0);
     path_config.d_i /= 1000;
+    const auto diag_threshold = path_name_with_prefix + std::string(".diag_threshold");
+    get_parameter_or(diag_threshold, path_config.diag_threshold, 1lu);
     const auto level_key = path_name_with_prefix + std::string(".level");
     get_parameter_or(level_key, path_config.level, std::string("none"));
 
     RCLCPP_INFO(
-      get_logger(), "path_name=%s %s [%s]\npath_i=%lu p_i=%lf d_i=%lf lv=%s",
+      get_logger(), "path_name=%s %s [%s]\npath_i=%lu p_i=%lf d_i=%lf lv=%s ths=%ld",
       path_config.path_name.c_str(), path_config.topic.c_str(), path_config.mtype.c_str(),
-      path_config.path_i, path_config.p_i, path_config.d_i, path_config.level.c_str());
+      path_config.path_i, path_config.p_i, path_config.d_i, path_config.level.c_str(),
+      path_config.diag_threshold);
     // Register each path
     required_paths.push_back(path_config);
   }
@@ -305,7 +314,6 @@ void TildeTimingMonitor::restartTimers(TildePathConfig & pinfo, double & cur_ros
     } else {
       // this process doesn't work
       RCLCPP_WARN(get_logger(), "[%s]:%04d ## do not enter this route", __func__, __LINE__);
-      pubDeadlineMiss(pinfo, pinfo.completed_j, next_periodic_start);
       pinfo.completed_j++;
       dbg_info_->setPresumedDeadlineCounter(pinfo);
     }
@@ -392,8 +400,8 @@ void TildeTimingMonitor::onDeadlineTimer(TildePathConfig & pinfo, DeadlineTimer 
   // deadline timer proc
   if (dm.self_j > pinfo.completed_j) {
     pinfo.completed_j = dm.self_j;
+    pinfo.deadline_miss_count++;
     dbg_info_->setDeadlineCounter(pinfo);
-    pubDeadlineMiss(pinfo, dm.self_j, dm.start_time);
   } else {
     RCLCPP_WARN(
       get_logger(), "[%s]:%04d <%s> ## deadline timer illegal 'j' j=%lu completed_j=%lu", __func__,
@@ -511,28 +519,47 @@ bool TildeTimingMonitor::isValidDeadlineTimer(TildePathConfig & pinfo, DeadlineT
   return true;
 }
 
-// publish the deadline miss topic
-void TildeTimingMonitor::pubDeadlineMiss(TildePathConfig & pinfo, int64_t & self_j, double & start)
+// update diagnostics data
+void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
-  dbg_info_->log(fmt::format(
-    "[{}]:{} <{}> {:.6f} PUBLISH DEADLINE DETECT TOPIC cur_j={} completed_j={}", __func__, __LINE__,
-    pinfo.path_name.c_str(), start, pinfo.cur_j, pinfo.completed_j));
-  auto m = tilde_timing_monitor_interfaces::msg::TildeTimingMonitorDeadlineMiss();
-  m.path_name = pinfo.path_name.c_str();
-  m.topic = pinfo.topic.c_str();
-  m.path_i = pinfo.path_i;
-  m.deadline_timer = pinfo.d_i;
-  m.periodic_timer = pinfo.p_i;
-  m.last_r_i_j_1_float = pinfo.r_i_j_1;
-  m.last_r_i_j_1_stamp = sec_to_stamp(pinfo.r_i_j_1);
-  m.deadline_timer_start = start;
-  m.deadline_timer_start_stamp = sec_to_stamp(start);
-  m.self_j = self_j;
-  m.cur_j = pinfo.cur_j;
-  m.completed_j = pinfo.completed_j;
-  m.mode = params_.mode.c_str();
-  m.header.stamp = get_clock()->now();
-  pub_tilde_deadline_miss_->publish(m);
+  RCLCPP_INFO(get_logger(), "[%.6f]--[%s]:%04d called", get_now(), __func__, __LINE__);
+  using diagnostic_msgs::msg::DiagnosticStatus;
+
+  auto diag_period = updater_->getPeriod().seconds();
+  bool warn_f = false;
+  bool error_f = false;
+  dbg_info_->cbStatisEnter(__func__);
+
+  for (auto & pinfo : required_paths_map_.at(params_.mode)) {
+    std::lock_guard<std::mutex> lock(*pinfo.tm_mutex);
+    
+    uint64_t diff = pinfo.deadline_miss_count - pinfo.prev_deadline_miss_count;
+    if (diff >= pinfo.diag_threshold) {
+      if (std::equal(pinfo.level.begin(), pinfo.level.end(), "error") == true) {
+        error_f = true;
+      } else {
+        warn_f = true;
+      }
+    }
+    std::string key = fmt::format("path#{}: {}", pinfo.index, pinfo.path_name.c_str());
+    std::string val = fmt::format(
+      "deadline miss count {}: path period {}(ms) deadline time {}(ms) threshold {}",
+      diff, pinfo.p_i, pinfo.d_i, pinfo.diag_threshold);
+    stat.add(key, val.c_str());
+    pinfo.prev_deadline_miss_count = pinfo.deadline_miss_count;
+  }
+  int8_t level = DiagnosticStatus::OK;
+  std::string msg = fmt::format("OK: diag period {}(sec)", diag_period);
+  if (error_f) {
+    level = DiagnosticStatus::ERROR;
+    msg = fmt::format("Error: diag period {}(sec)", diag_period);
+  } else if (warn_f) {
+    level = DiagnosticStatus::WARN;
+    msg = fmt::format("Warn: diag period {}(sec)", diag_period);
+  }
+  stat.summary(level, msg);
+
+  dbg_info_->cbStatisExit(__func__);
 }
 
 void TildeTimingMonitor::stopDetect(TildePathConfig & pinfo)

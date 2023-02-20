@@ -157,7 +157,7 @@ class TildePathConfig;
 class TildePathDebug
 {
 public:
-  TildePathDebug(std::shared_ptr<TildePathConfig> & pinfo_ptr)
+  explicit TildePathDebug(std::shared_ptr<TildePathConfig> & pinfo_ptr)
   : pinfo_ptr(pinfo_ptr)
   {
     completed_count = 0lu;

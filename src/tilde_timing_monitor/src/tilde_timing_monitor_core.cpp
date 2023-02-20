@@ -106,7 +106,6 @@ TildeTimingMonitor::TildeTimingMonitor()
         pinfo_ptr->mtype.c_str());
       exit(-1);
     }
-    //
     dbg_info_->registerPathDebugInfo(pinfo_ptr->index, std::make_shared<TildePathDebug>(pinfo_ptr));
   }
 

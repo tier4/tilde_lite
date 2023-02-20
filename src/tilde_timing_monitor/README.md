@@ -14,16 +14,8 @@ If you use the TILDE message tracking tag, the response time will be the time un
 ## environment
 
 - ros2: humble
-- fork of autoware foundation to TILDE
-
-  - repo: <https://github.com/xygyo77/tilde-autoware.git>
-  - branch: humble
-
-  ```bash
-  vcs import src << nrm-build.hashed.repos
-  ```
-
-note: ndt_scan_matcher contains a unique change that outputs the latest EKF pose topic used during interpolation.
+- AWF
+It is necessary to prepare an AWF environment that reflects https://github.com/orgs/autowarefoundation/discussions/3176.
 
 ## install
 
@@ -67,43 +59,38 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
 ```yaml
 /**:
   ros__parameters:
-    diag_period_sec: 5.0 # interval diagnostics (sec)
-    required_paths:
-      test:
-        /localization/pose_estimator/for_tilde_interpolator_mtt:
-          {
-            mtype: "tilde_msg/msg/MessageTrackingTag",
-            path_name: "EKF=>NDT",
-            path_i: 0,
-            p_i: 100.0,
-            d_i: 150.0,
-            level: warn,
-          }
-        /localization/pose_estimator/pose_with_covariance:
-          {
-            mtype: "geometry_msgs/msg/PoseWithCovarianceStamped",
-            path_name: "PCL=>NDT",
-            path_i: 1,
-            p_i: 100.0,
-            d_i: 120.0,
-            level: warn,
-          }
+    diag_period_sec: 5.0 # frequency of report
+    target_paths:
+      ekf-to-ndt: # path name
+        topic: /localization/pose_estimator/for_tilde_interpolator_mtt # topic name
+        message_type: tilde_msg/msg/MessageTrackingTag # message type
+        severity: warn # severity
+        period: 100.0 # execution frequency of path
+        deadline: 200.0 # deadline of response time
+        violation_count_thresh: 2 # threshold to judge warn or not.
+
+      pointcloudPreprocessor-to-ndt: # path name
+        topic: /localization/pose_estimator/pose_with_covariance # topic name
+        message_type: geometry_msgs/msg/PoseWithCovarianceStamped # message type
+        severity: error # severity
+        period: 100.0 # execution frequency of path
+        deadline: 150.0 # deadline of response time
+        violation_count_thresh: 1 # threshold to judge error or not.```
 ```
 
-| name                | content                             |
-| ------------------- | ----------------------------------- |
-| diag_period_sec     | /diagnostics topic interval         |
-| required_paths      | measurement path information        |
-| mode (ex. test)     | measurement path set id             |
-| topic name          | end point node published topic name |
-| mtype               | message type                        |
-| path_name(any word) | the name given to the path          |
-| path_i              | path number                         |
-| p_i                 | periodic timer value (msec)         |
-| d_i                 | deadline detect timer value (msec)  |
-| level               | diagnostic severity                 |
+| name                   | content                             |
+| -----------------------|-------------------------------------|
+| diag_period_sec        | frequency of report (sec)           |
+| target_paths           | target path information             |
+| path_name(any word)    | the name given to the path          |
+| topic name             | end point node published topic name |
+| message_type           | message type                        |
+| severity               | diagnostic severity                 |
+| periodic               | periodic timer value (msec)         |
+| deadline               | deadline detect timer value (msec)  |
+| violation_count_thresh | threshold to judge warn/error or not|
 
-- invoke logging simulator
+- invoke logging simulator  
 
 ```bash
 ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/data/sample-map-rosbag   vehicle_model:=sample_vehicle   sensor_model:=sample_sensor_kit rviz:=True
@@ -118,17 +105,18 @@ ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/d
 ros2 bag play /home/akm/data/sample-rosbag -r 0.2
 ```
 
+ note: Deadline misses do not normally occur. In order to generate it artificially, for example, after starting the rosbag, it is necessary to apply a load with the stress command.
+
 - tilde timing monitor
 
 ```bash
 source ~/colcon_ws/tilde_lite/install/local_setup.bash
 cp ~/colcon_ws/tilde_lite/src/tilde_timing_monitor/config/tilde_path_info.yaml .
-ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml mode:=test
+ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml
 ```
 
 | param | value          | content               | default |
 | ----- | -------------- | --------------------- | ------- |
-| mode  | by config file | Measurement path type | test    |
 | debug | bool           | debug control         | false   |
 
 ## output

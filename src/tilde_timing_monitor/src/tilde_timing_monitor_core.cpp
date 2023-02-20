@@ -95,7 +95,6 @@ TildeTimingMonitor::TildeTimingMonitor()
     try {
       const auto gen_sub = create_generic_subscription(
         pinfo_ptr->topic, pinfo_ptr->mtype, qos,
-        //[this, &pinfo_ptr](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
         [this, pinfo_ptr](const std::shared_ptr<rclcpp::SerializedMessage> msg) {
           TildeTimingMonitor::onGenTopic(msg, pinfo_ptr);
         });

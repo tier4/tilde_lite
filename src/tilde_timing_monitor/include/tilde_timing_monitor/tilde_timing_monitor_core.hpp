@@ -70,14 +70,15 @@ public:
   std::string level;
   std::mutex * p_mutex;
 
-  TildePathConfig(uint32_t index, std::mutex * mtx)
-  : index(index), p_mutex(mtx)
+  TildePathConfig(uint32_t index, std::mutex * mtx) : index(index), p_mutex(mtx)
   {
-    std::string fs = fmt::format("[{}]:{} >>> constructor({}) >>>", __func__, __LINE__, this->index);
+    std::string fs =
+      fmt::format("[{}]:{} >>> constructor({}) >>>", __func__, __LINE__, this->index);
     std::cout << fs.c_str() << std::endl;
     status = e_stat::ST_NONE;
     cur_j = 0l;
     completed_j = -1l;
+    deadline_miss_count = 0lu;
     deadline_timer_manage = 0lu;
     r_i_j_1 = r_i_j = 0.0;
   }
@@ -101,9 +102,8 @@ public:
   double r_i_j_1;
   double r_i_j;
   uint64_t deadline_timer_manage;
-  uint64_t violation_count_thresh;
   // diagnostics
-  uint64_t diag_threshold;
+  uint64_t violation_count_threshold;
   uint64_t deadline_miss_count;
   uint64_t prev_deadline_miss_count;
 };
@@ -128,7 +128,9 @@ private:
 
   void loadTargetPaths();
   // Subscriber
-  void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, std::shared_ptr<TildePathConfig> pinfo_ptr);
+  void onGenTopic(
+    const std::shared_ptr<rclcpp::SerializedMessage> msg,
+    std::shared_ptr<TildePathConfig> pinfo_ptr);
   void topicCallback(
     TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
   bool isOverDeadline(

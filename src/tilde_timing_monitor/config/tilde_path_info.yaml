@@ -8,7 +8,7 @@
         severity: warn # severity
         period: 100.0 # execution frequency of path
         deadline: 200.0 # deadline of response time
-        violation_count_thresh: 2 # threshold to judge warn or not.
+        violation_count_threshold: 2 # threshold to judge warn or not.
 
       pointcloudPreprocessor-to-ndt: # path name
         topic: /localization/pose_estimator/pose_with_covariance # topic name
@@ -16,4 +16,4 @@
         severity: error # severity
         period: 100.0 # execution frequency of path
         deadline: 150.0 # deadline of response time
-        violation_count_thresh: 1 # threshold to judge error or not.
+        violation_count_threshold: 1 # threshold to judge error or not.

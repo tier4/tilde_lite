@@ -67,7 +67,7 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
         severity: warn # severity
         period: 100.0 # execution frequency of path
         deadline: 200.0 # deadline of response time
-        violation_count_thresh: 2 # threshold to judge warn or not.
+        violation_count_threshold: 2 # threshold to judge warn or not.
 
       pointcloudPreprocessor-to-ndt: # path name
         topic: /localization/pose_estimator/pose_with_covariance # topic name
@@ -75,20 +75,20 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
         severity: error # severity
         period: 100.0 # execution frequency of path
         deadline: 150.0 # deadline of response time
-        violation_count_thresh: 1 # threshold to judge error or not.```
+        violation_count_threshold: 1 # threshold to judge error or not.```
 ```
 
-| name                   | content                             |
-| -----------------------|-------------------------------------|
-| diag_period_sec        | frequency of report (sec)           |
-| target_paths           | target path information             |
-| path_name(any word)    | the name given to the path          |
-| topic name             | end point node published topic name |
-| message_type           | message type                        |
-| severity               | diagnostic severity                 |
-| periodic               | periodic timer value (msec)         |
-| deadline               | deadline detect timer value (msec)  |
-| violation_count_thresh | threshold to judge warn/error or not|
+| name                      | content                             |
+| --------------------------|-------------------------------------|
+| diag_period_sec           | frequency of report (sec)           |
+| target_paths              | target path information             |
+| path_name(any word)       | the name given to the path          |
+| topic name                | end point node published topic name |
+| message_type              | message type                        |
+| severity                  | diagnostic severity                 |
+| periodic                  | periodic timer value (msec)         |
+| deadline                  | deadline detect timer value (msec)  |
+| violation_count_threshold | threshold to judge warn/error or not|
 
 - invoke logging simulator  
 
@@ -104,8 +104,6 @@ ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/d
 ```bash
 ros2 bag play /home/akm/data/sample-rosbag -r 0.2
 ```
-
- note: Deadline misses do not normally occur. In order to generate it artificially, for example, after starting the rosbag, it is necessary to apply a load with the stress command.
 
 - tilde timing monitor
 
@@ -160,7 +158,6 @@ status:
       - key: "path#1: PointcloudPreprocessor to NDT"
         value: "deadline miss count 45 total 47: path period 0.1(ms) deadline time 0.15(ms) threshold 1"
 ---
-```
 
 - **information and statistics topic**
 

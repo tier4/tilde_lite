@@ -38,10 +38,11 @@
 #include <unordered_map>
 #include <vector>
 
-#define LOC { \
-  std::string fs = fmt::format("[{}]:{}", __func__, __LINE__); \
-  std::cout << fs.c_str() << std::endl; \
-}
+#define LOC                                                      \
+  {                                                              \
+    std::string fs = fmt::format("[{}]:{}", __func__, __LINE__); \
+    std::cout << fs.c_str() << std::endl;                        \
+  }
 
 namespace tilde_timing_monitor
 {

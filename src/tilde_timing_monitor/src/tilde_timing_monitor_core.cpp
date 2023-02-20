@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "tilde_timing_monitor/tilde_timing_monitor_core.hpp"
+
 #include "tilde_timing_monitor/tilde_timing_monitor_debug.hpp"
 
 #include <algorithm>
@@ -527,7 +528,8 @@ void TildeTimingMonitor::diagDataUpdate(diagnostic_updater::DiagnosticStatusWrap
         warn_f = true;
       }
     }
-    std::string key = fmt::format("path#{}: {} ({})", pinfo.index, pinfo.path_name.c_str(), pinfo.level.c_str());
+    std::string key =
+      fmt::format("path#{}: {} ({})", pinfo.index, pinfo.path_name.c_str(), pinfo.level.c_str());
     std::string val = fmt::format(
       "deadline miss count {} total {}: path period {}(ms) deadline time {}(ms) threshold {}", diff,
       diff + pinfo.prev_deadline_miss_count, pinfo.p_i, pinfo.d_i, pinfo.violation_count_threshold);
@@ -565,9 +567,6 @@ void TildeTimingMonitor::stopDetect(TildePathConfig & pinfo)
   pinfo.deadline_timer.clear();
 }
 
-double TildeTimingMonitor::get_now()
-{
-  return nano_to_sec(get_clock()->now().nanoseconds());
-}
+double TildeTimingMonitor::get_now() { return nano_to_sec(get_clock()->now().nanoseconds()); }
 
 }  // namespace tilde_timing_monitor

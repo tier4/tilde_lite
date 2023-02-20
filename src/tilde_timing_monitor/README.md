@@ -15,7 +15,7 @@ If you use the TILDE message tracking tag, the response time will be the time un
 
 - ros2: humble
 - AWF
-It is necessary to prepare an AWF environment that reflects https://github.com/orgs/autowarefoundation/discussions/3176.
+  It is necessary to prepare an AWF environment that reflects <https://github.com/orgs/autowarefoundation/discussions/3176>.
 
 ## install
 
@@ -56,7 +56,7 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
 
 - prepare path list yaml file (see. config/tilde_path_info.yaml)
 
-```yaml
+````yaml
 /**:
   ros__parameters:
     diag_period_sec: 5.0 # frequency of report
@@ -76,21 +76,21 @@ See <https://autowarefoundation.github.io/autoware-documentation/main/installati
         period: 100.0 # execution frequency of path
         deadline: 150.0 # deadline of response time
         violation_count_threshold: 1 # threshold to judge error or not.```
-```
+````
 
-| name                      | content                             |
-| --------------------------|-------------------------------------|
-| diag_period_sec           | frequency of report (sec)           |
-| target_paths              | target path information             |
-| path_name(any word)       | the name given to the path          |
-| topic name                | end point node published topic name |
-| message_type              | message type                        |
-| severity                  | diagnostic severity                 |
-| periodic                  | periodic timer value (msec)         |
-| deadline                  | deadline detect timer value (msec)  |
-| violation_count_threshold | threshold to judge warn/error or not|
+| name                      | content                              |
+| ------------------------- | ------------------------------------ |
+| diag_period_sec           | frequency of report (sec)            |
+| target_paths              | target path information              |
+| path_name(any word)       | the name given to the path           |
+| topic name                | end point node published topic name  |
+| message_type              | message type                         |
+| severity                  | diagnostic severity                  |
+| periodic                  | periodic timer value (msec)          |
+| deadline                  | deadline detect timer value (msec)   |
+| violation_count_threshold | threshold to judge warn/error or not |
 
-- invoke logging simulator  
+- invoke logging simulator
 
 ```bash
 ros2 launch autoware_launch logging_simulator.launch.xml   map_path:=/home/akm/data/sample-map-rosbag   vehicle_model:=sample_vehicle   sensor_model:=sample_sensor_kit rviz:=True
@@ -113,9 +113,9 @@ cp ~/colcon_ws/tilde_lite/src/tilde_timing_monitor/config/tilde_path_info.yaml .
 ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_file:=tilde_path_info.yaml
 ```
 
-| param | value          | content               | default |
-| ----- | -------------- | --------------------- | ------- |
-| debug | bool           | debug control         | false   |
+| param | value | content       | default |
+| ----- | ----- | ------------- | ------- |
+| debug | bool  | debug control | false   |
 
 ## output
 
@@ -124,7 +124,7 @@ ros2 launch tilde_timing_monitor tilde_timing_monitor_node.launch.xml config_fil
 
 /diagnostics
 
-```yaml
+````yaml
 ---
 header:
   stamp:
@@ -163,7 +163,7 @@ status:
 
 ```bash
 ros2 topic pub  /tilde_timing_monitor_command tilde_timing_monitor_interfaces/msg/TildeTimingMonitorCommand '{command: req info}' --once
-```
+````
 
 ```yaml
 header:

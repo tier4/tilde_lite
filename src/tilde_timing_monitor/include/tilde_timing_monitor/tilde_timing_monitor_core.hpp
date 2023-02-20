@@ -51,8 +51,7 @@ struct DeadlineTimer
 
 using DeadlineTimerMap = std::unordered_map<uint64_t, DeadlineTimer>;
 
-enum class e_stat
-{
+enum class e_stat {
   ST_NONE,
   ST_INIT,
   ST_DETECT,

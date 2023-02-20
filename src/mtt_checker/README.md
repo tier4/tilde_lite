@@ -74,7 +74,7 @@ proc_time(s): pub_time - release_time(EKF+NDT process time)
 **ノーマルモード**  
 シンプルモードに加えて、periodic タイマ毎にデッドライン検出タイマを起動させた時のシミュレーションを行う。通信遅延は考慮されない。
 
-```bash
+````bash
 ros2 run mtt_checker mtt_checker ~/tilde_lite/src/mtt_checker/sample/STRESS-rosbag/ -m normal -p 100 -d 200 -t for_tilde_interpolator_mtt
 ### DEBUG=False
 [WARN] [1674613470.464989912] [rosbag2_storage]: No storage plugin found with id 'sqlite3'.
@@ -106,4 +106,4 @@ proc(s): pub_time - release_time (response_time)
 --- p_i count= 246 p_i in time=258.350 ---
 --- ( 248) OK:152 NG: 90 completed_j=242 ---
 (END:v0.12)---------------------------------```
-```
+````

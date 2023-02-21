@@ -34,6 +34,9 @@
 #include <unordered_map>
 #include <vector>
 
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+
 namespace tilde_timing_monitor
 {
 struct DeadlineTimer
@@ -59,23 +62,33 @@ class TildePathConfig
 public:
   uint32_t index;
   std::string path_name;
-  uint64_t path_i;
   std::string topic;
   std::string mtype;
   double p_i;
   double d_i;
   std::string level;
-  std::shared_ptr<std::mutex> tm_mutex;
-  TildePathConfig()
+  std::mutex * p_mutex;
+
+  TildePathConfig(uint32_t index, std::mutex * mtx) : index(index), p_mutex(mtx)
   {
-    std::shared_ptr<std::mutex> mtx(new std::mutex);
+    std::string fs =
+      fmt::format("[{}]:{} >>> constructor({}) >>>", __func__, __LINE__, this->index);
+    std::cout << fs.c_str() << std::endl;
     status = e_stat::ST_NONE;
     cur_j = 0l;
     completed_j = -1l;
-    tm_mutex = mtx;
-    deadline_timer_manage = 0lu;
     deadline_miss_count = 0lu;
+    deadline_timer_manage = 0lu;
+    r_i_j_1 = r_i_j = 0.0;
   }
+  TildePathConfig(const TildePathConfig & c) = delete;
+  ~TildePathConfig()
+  {
+    std::string fs = fmt::format("[{}]:{} <<< destructor({}) <<<", __func__, __LINE__, this->index);
+    std::cout << fs.c_str() << std::endl;
+    delete p_mutex;
+  }
+
   // variables
   e_stat status;
   int64_t cur_j;
@@ -89,18 +102,9 @@ public:
   double r_i_j;
   uint64_t deadline_timer_manage;
   // diagnostics
-  uint64_t diag_threshold;
+  uint64_t violation_count_threshold;
   uint64_t deadline_miss_count;
   uint64_t prev_deadline_miss_count;
-};
-
-using RequiredPaths = std::vector<TildePathConfig>;
-
-struct KeyName
-{
-  static constexpr char autonomous_driving[] = "autonomous_driving";
-  static constexpr char test[] = "test";
-  static constexpr char test_sensing[] = "test_sensing";
 };
 
 class TildeTimingMonitor : public rclcpp::Node
@@ -108,9 +112,6 @@ class TildeTimingMonitor : public rclcpp::Node
 public:
   TildeTimingMonitor();
   bool get_debug_param() { return params_.debug_ctrl; }
-  bool get_ros_time_param() { return params_.pseudo_ros_time; }
-  std::string get_mode_param() { return params_.mode; }
-
   void registerNodeToDebug(const std::shared_ptr<TildeTimingMonitor> & node);
   double get_now();
 
@@ -118,20 +119,17 @@ private:
   struct Parameters
   {
     bool debug_ctrl;
-    bool pseudo_ros_time;
-    std::string mode;
   };
   Parameters params_{};
 
   std::shared_ptr<rclcpp::Clock> clock_;
   std::shared_ptr<rclcpp::Clock> steady_clock_;
 
-  std::map<std::string, RequiredPaths> required_paths_map_;
-
-  void loadRequiredPaths(const std::string & key);
-
+  void loadTargetPaths();
   // Subscriber
-  void onGenTopic(const std::shared_ptr<rclcpp::SerializedMessage> msg, TildePathConfig & pinfo);
+  void onGenTopic(
+    const std::shared_ptr<rclcpp::SerializedMessage> msg,
+    std::shared_ptr<TildePathConfig> pinfo_ptr);
   void topicCallback(
     TildePathConfig & pinfo, double & pub_time, double & cur_ros, double & response_time);
   bool isOverDeadline(
@@ -151,9 +149,6 @@ private:
 
   // debug
   void stopDetect(TildePathConfig & pinfo);
-
-  void adjustPseudoRosTime();
-  void pseudoRosTimeInit();
 };
 
 }  // namespace tilde_timing_monitor

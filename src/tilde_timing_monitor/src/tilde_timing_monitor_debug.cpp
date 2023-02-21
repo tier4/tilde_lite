@@ -77,14 +77,12 @@ void TildeTimingMonitorDebug::cmdShowStatis()
 {
   std::string fs = fmt::format("\n----- statistics ({}) -----", this->version);
   std::cout << fs.c_str() << std::endl;
-  fs = fmt::format("mode={}", this->node->get_mode_param());
-  std::cout << fs.c_str() << std::endl;
   for (auto pair : path_debug_info_) {
     auto dinfo_ptr = pair.second;
     auto pinfo_ptr = dinfo_ptr->pinfo_ptr;
     fs = fmt::format(
       "path_name={} path_i={} p_i={}(ms) d_i={}(ms)", pinfo_ptr->path_name.c_str(),
-      pinfo_ptr->path_i, pinfo_ptr->p_i * 1000, pinfo_ptr->d_i * 1000);
+      pinfo_ptr->index, pinfo_ptr->p_i * 1000, pinfo_ptr->d_i * 1000);
     std::cout << fs.c_str() << std::endl;
     fs = fmt::format("topic={} [{}]", pinfo_ptr->topic.c_str(), pinfo_ptr->mtype.c_str());
     std::cout << fs.c_str() << std::endl;
@@ -229,7 +227,6 @@ void TildeTimingMonitorDebug::pubCmdReqInfo()
   }
   // RCLCPP_INFO(this->node->get_logger(), "--[%s]:%04d called", __func__, __LINE__);
   auto m = tilde_timing_monitor_interfaces::msg::TildeTimingMonitorInfos();
-  m.mode = this->node->get_mode_param().c_str();
   for (auto & pair : path_debug_info_) {
     auto dinfo_ptr = pair.second;
     auto pinfo_ptr = dinfo_ptr->pinfo_ptr;
@@ -250,7 +247,7 @@ void TildeTimingMonitorDebug::pubCmdReqInfo()
     p.too_long_response_time_min = dinfo_ptr->too_long_response_time.getMin();
     p.too_long_response_time_max = dinfo_ptr->too_long_response_time.getMax();
     p.too_long_response_time_ave = dinfo_ptr->too_long_response_time.getAve();
-    p.path_i = pinfo_ptr->path_i;
+    p.path_i = pinfo_ptr->index;
     p.cur_j = pinfo_ptr->cur_j;
     p.completed_j = pinfo_ptr->completed_j;
     p.r_i_j_1_stamp = pinfo_ptr->r_i_j_1_stamp;

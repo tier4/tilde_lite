@@ -127,7 +127,7 @@ The timing violation monitor has a configuration file to know which path and top
 
 The sample configuration file is shown as below. If you add a new path, append the items in `target_paths`.
 
-```yml
+```yaml
 ros__parameters:
   diag_period_sec: 5.0 # frequency of report
   target_paths:
@@ -137,7 +137,7 @@ ros__parameters:
       severity: warn # severity
       period: 100.0 # execution frequency of path
       deadline: 200.0 # deadline of response time
-      violation_count_thresh: 5 # threshold to judge warn or not.
+      violation_count_threshold: 5 # threshold to judge warn or not.
 ```
 
 <!-- prettier-ignore-start -->

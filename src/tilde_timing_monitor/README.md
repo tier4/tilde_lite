@@ -265,15 +265,18 @@ cb_latency:
 
 Publish tilde_timing_monitor commands as below.
 
-| command   | contents                             |
-| --------- | ------------------------------------ |
-| req info  | publish infos and statistics topic   |
-| show info | show infos and statistics on console |
-| show hist | show log                             |
-| dbgon     | debug mode enable                    |
-| dbgoff    | debug mode disable                   |
-| clrinfo   | clear statistics & information       |
-| detoff    | detect deadline disable -> enable    |
+| command       | contents                                                                  |
+| ------------- | ------------------------------------------------------------------------- |
+| req info      | publish infos and statistics topic                                        |
+| show info     | show infos and statistics on console                                      |
+| show hist     | show storing log on console                                               |
+| dbg on        | debug mode enable                                                         |
+| dbg off       | debug mode disable                                                        |
+| clear info    | clear statistics & information                                            |
+| detection on  | detect timing violation enable (enable by default)                        |
+| detection off | detect timing violation disable                                           |
+| hist on       | store log enable                                                          |
+| hist off      | store log disable (log is not stored and not shown in "show hist" command |
 
 - **example show info**
 
